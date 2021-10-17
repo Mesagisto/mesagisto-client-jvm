@@ -1,3 +1,4 @@
+@file:Suppress("NOTHING_TO_INLINE", "unused", "MemberVisibilityCanBePrivate")
 package org.meowcat.mesagisto.client
 
 import arrow.core.Either
@@ -38,7 +39,7 @@ object Cache : CoroutineScope {
       fileByUrl(id, url)
     }
   }
-  private suspend fun fileById(
+  suspend fun fileById(
     id: String,
     address: String,
   ): Result<Path> = runCatching call@{
@@ -70,7 +71,7 @@ object Cache : CoroutineScope {
       }
     }
   }
-  private suspend fun fileByUrl(
+  suspend fun fileByUrl(
     id: String,
     url: String
   ): Result<Path> = runCatching call@{
