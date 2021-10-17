@@ -8,5 +8,4 @@
  */
 
 rootProject.name = "mesagisto-client"
-include("lib")
-findProject("lib")?.name = "mesagisto-client"
+

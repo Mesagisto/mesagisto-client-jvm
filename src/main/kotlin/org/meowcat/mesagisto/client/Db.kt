@@ -1,3 +1,4 @@
+@file:Suppress("NOTHING_TO_INLINE", "unused", "MemberVisibilityCanBePrivate")
 package org.meowcat.mesagisto.client
 
 import org.rocksdb.* // ktlint-disable no-wildcard-imports
