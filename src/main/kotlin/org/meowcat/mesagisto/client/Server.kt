@@ -13,6 +13,7 @@ import kotlinx.coroutines.future.await
 import org.meowcat.mesagisto.client.data.EventType
 import org.meowcat.mesagisto.client.data.Packet
 import org.tinylog.kotlin.Logger
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
@@ -21,9 +22,20 @@ object Server : CoroutineScope {
   private lateinit var Address: String
   private val NC: Connection by lazy {
     Logger.info { "Trying to connect to nats server: $Address" }
-    val nc = Nats.connect(Address)
-    Logger.info { "Connect successfully" }
-    nc
+    val nc = runCatching {
+      Nats.connect(Address)
+    }.recoverCatching {
+      when (it) {
+        is IOException -> {
+          Logger.info { "Failed to connection,auto retrying..." }
+          Nats.connect(Address)
+        }
+        else -> throw it
+      }
+    }.getOrThrow()
+
+    Logger.info { "Connect nats successfully" }
+    return@lazy nc
   }
   private val CID by lazy { NC.serverInfo.clientId.toString() }
   internal val NatsHeader by lazy {
