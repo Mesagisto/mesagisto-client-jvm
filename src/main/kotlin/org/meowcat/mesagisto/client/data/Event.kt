@@ -1,3 +1,4 @@
+@file:Suppress("ArrayInDataClass", "unused")
 package org.meowcat.mesagisto.client.data
 
 import arrow.core.right
