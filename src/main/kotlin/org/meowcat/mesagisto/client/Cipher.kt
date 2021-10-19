@@ -6,21 +6,31 @@ import org.bouncycastle.crypto.params.AEADParameters
 import org.bouncycastle.crypto.params.KeyParameter
 import java.security.MessageDigest
 import java.security.SecureRandom
+import kotlin.properties.Delegates
 
 object Cipher {
   private lateinit var KEY: KeyParameter
   internal lateinit var RAW_KEY: String
   private val SECURE_RANDOM: SecureRandom by lazy { SecureRandom() }
+  var ENABLE by Delegates.notNull<Boolean>()
+    private set
+  var REFUSE_PLAIN by Delegates.notNull<Boolean>()
+    private set
   fun newNonce(): ByteArray {
     val nonce = ByteArray(12)
     SECURE_RANDOM.nextBytes(nonce)
     return nonce
   }
-  fun init(key: String) {
+  fun init(key: String, refusePlain: Boolean = true) {
+    ENABLE = true
+    REFUSE_PLAIN = refusePlain
     RAW_KEY = key
     val digest = MessageDigest.getInstance("SHA-256")
     val key256 = digest.digest(key.toByteArray())
     KEY = KeyParameter(key256)
+  }
+  fun deinit() {
+    ENABLE = false
   }
   fun encrypt(plaintext: ByteArray, nonce: ByteArray): ByteArray {
     val cipher = GCMBlockCipher(AESEngine())

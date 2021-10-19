@@ -1,3 +1,5 @@
+@file:Suppress("ArrayInDataClass")
+
 package org.meowcat.mesagisto.client.data
 
 import arrow.core.Either
@@ -69,15 +71,23 @@ data class Packet(
       val packet: Packet = Cbor.decodeFromByteArray(data)
       if (packet.type == "message") {
         if (packet.encrypt == null) {
-          val message = Cbor.decodeFromByteArray<Message>(packet.content)
-          Either.Left(message)
+          if (Cipher.ENABLE && !Cipher.REFUSE_PLAIN) {
+            val message = Cbor.decodeFromByteArray<Message>(packet.content)
+            Either.Left(message)
+          } else {
+            throw IllegalStateException("Refuse plain messages")
+          }
         } else {
           handleEncrypt(packet, true).getOrThrow()
         }
       } else if (packet.type == "event") {
         if (packet.encrypt == null) {
-          val event: Event = Cbor.decodeFromByteArray(packet.content)
-          Either.Right(event)
+          if (Cipher.ENABLE && !Cipher.REFUSE_PLAIN) {
+            val event: Event = Cbor.decodeFromByteArray(packet.content)
+            Either.Right(event)
+          }else {
+            throw IllegalStateException("Refuse plain messages")
+          }
         } else {
           handleEncrypt(packet, false).getOrThrow()
         }
