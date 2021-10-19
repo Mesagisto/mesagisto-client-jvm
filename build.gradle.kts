@@ -12,7 +12,7 @@ publishing {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.0.3"
+      version = "1.0.4"
     }
   }
 }
