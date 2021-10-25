@@ -6,6 +6,7 @@ import org.bouncycastle.crypto.params.AEADParameters
 import org.bouncycastle.crypto.params.KeyParameter
 import java.security.MessageDigest
 import java.security.SecureRandom
+import kotlin.concurrent.getOrSet
 import kotlin.properties.Delegates
 
 object Cipher {
@@ -16,6 +17,7 @@ object Cipher {
     private set
   var REFUSE_PLAIN by Delegates.notNull<Boolean>()
     private set
+  private val inner: ThreadLocal<GCMBlockCipher> = ThreadLocal()
   fun newNonce(): ByteArray {
     val nonce = ByteArray(12)
     SECURE_RANDOM.nextBytes(nonce)
@@ -33,22 +35,30 @@ object Cipher {
     ENABLE = false
   }
   fun encrypt(plaintext: ByteArray, nonce: ByteArray): ByteArray {
-    val cipher = GCMBlockCipher(AESEngine())
-    val parameters = AEADParameters(KEY, 128, nonce)
-    cipher.init(true, parameters)
-    val encryptedBytes = ByteArray(cipher.getOutputSize(plaintext.size))
-    val retLen = cipher.processBytes(plaintext, 0, plaintext.size, encryptedBytes, 0)
-    cipher.doFinal(encryptedBytes, retLen)
+    val cipher = inner.getOrSet { GCMBlockCipher(AESEngine()) }
+    val key = AEADParameters(KEY, 128, nonce)
+    val encryptedBytes = with(cipher) {
+      init(true, key)
+      val res = ByteArray(getOutputSize(plaintext.size))
+      val retLen = processBytes(plaintext, 0, plaintext.size, res, 0)
+      doFinal(res, retLen)
+      reset()
+      return@with res
+    }
     return encryptedBytes
   }
 
   fun decrypt(ciphertext: ByteArray, nonce: ByteArray): ByteArray {
-    val cipher = GCMBlockCipher(AESEngine())
-    val parameters = AEADParameters(KEY, 128, nonce)
-    cipher.init(false, parameters)
-    val plainBytes = ByteArray(cipher.getOutputSize(ciphertext.size))
-    val retLen = cipher.processBytes(ciphertext, 0, ciphertext.size, plainBytes, 0)
-    cipher.doFinal(plainBytes, retLen)
+    val cipher = inner.getOrSet { GCMBlockCipher(AESEngine()) }
+    val key = AEADParameters(KEY, 128, nonce)
+    val plainBytes = with(cipher) {
+      cipher.init(false, key)
+      val res = ByteArray(getOutputSize(ciphertext.size))
+      val retLen = processBytes(ciphertext, 0, ciphertext.size, res, 0)
+      doFinal(res, retLen)
+      reset()
+      return@with res
+    }
     return plainBytes
   }
 }
