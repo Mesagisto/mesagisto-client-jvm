@@ -5,14 +5,17 @@ plugins {
   `java-library`
   `maven-publish` // Jitpack
 }
-
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
 publishing {
   publications {
-    register("mavenJava", MavenPublication::class) {
+    register("maven", MavenPublication::class) {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.0.4"
+      version = "1.0.5"
     }
   }
 }
@@ -24,10 +27,10 @@ repositories {
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     kotlinOptions {
-      jvmTarget = "11"
+      jvmTarget = "1.8"
       freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
     }
-    sourceCompatibility = "11"
+    sourceCompatibility = "1.8"
   }
 }
 dependencies {
