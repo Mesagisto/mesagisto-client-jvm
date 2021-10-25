@@ -2,7 +2,6 @@
 package org.meowcat.mesagisto.client
 
 import org.rocksdb.* // ktlint-disable no-wildcard-imports
-import org.tinylog.kotlin.Logger
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
 
@@ -35,7 +34,7 @@ object Db : AutoCloseable {
     reverse: Boolean = true
   ) {
     val msgIdDb = midDbMap.getOrPut(target.contentHashCode()) {
-      Logger.trace { "Message id db not found,creating a new one" }
+      Logger.trace("Message id db not found,creating a new one")
       val options = Options()
         .setCreateIfMissing(true)
       Path("db/$dbName/msg-id").ensureDirectories()

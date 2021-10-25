@@ -1,7 +1,6 @@
 package org.meowcat.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
-import org.tinylog.kotlin.Logger
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
@@ -66,9 +65,9 @@ object Res : CoroutineScope {
     photoUrlResolver = f
   }
   suspend fun getPhotoUrl(uid: String): String? {
-    Logger.trace { "Getting url by id" }
+    Logger.trace("Getting url by id")
     val fileId = Db.getImageId(uid) ?: return null
-    Logger.trace { "Gotten photo id" }
+    Logger.trace("Gotten photo id")
     // fixme
     return photoUrlResolver(uid, fileId).getOrNull()
   }
@@ -76,7 +75,7 @@ object Res : CoroutineScope {
     name: String,
     converter: suspend (Path, Path) -> Result<Unit>
   ): Result<Unit> = runCatching {
-    Logger.trace { "converting lib" }
+    Logger.trace("converting lib")
     val path = path(name)
     val tmpPath = tmpPath(name)
     runInterruptible {
@@ -85,7 +84,7 @@ object Res : CoroutineScope {
       tmpPath.createFile()
       path.moveTo(convertPath)
     }
-    Logger.trace { "invoking converter" }
+    Logger.trace("invoking converter")
     converter.invoke(path("convert-$name"), tmpPath).onFailure {
       Logger.error(it)
     }
@@ -93,7 +92,7 @@ object Res : CoroutineScope {
       tmpPath.moveTo(path)
       path("convert-$name").deleteIfExists()
     }
-    Logger.trace { "invoking successfully" }
+    Logger.trace("invoking successfully")
   }
   fun storePhotoId(uid: String, fileId: String = "") {
     Db.putImageId(uid, fileId)

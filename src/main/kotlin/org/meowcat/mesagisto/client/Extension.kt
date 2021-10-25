@@ -4,7 +4,6 @@ import io.nats.client.Dispatcher
 import io.nats.client.Message
 import io.nats.client.Subscription
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
-import org.tinylog.kotlin.Logger
 import java.io.File
 import java.net.Proxy
 import java.net.URL

@@ -7,7 +7,6 @@ import arrow.core.Option
 import arrow.core.Some
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import org.meowcat.mesagisto.client.data.* // ktlint-disable no-wildcard-imports
-import org.tinylog.kotlin.Logger
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URI
@@ -43,20 +42,20 @@ object Cache : CoroutineScope {
     id: String,
     address: String,
   ): Result<Path> = runCatching call@{
-    Logger.debug { "Cache by id $id" }
+    Logger.debug("Cache by id $id")
     val path = Res.path(id)
     if (path.exists()) {
-      Logger.trace { "File exists,return the path" }
+      Logger.trace("File exists,return the path")
       return@call path
     }
     val tmpPath = Res.tmpPath(id)
 
     if (tmpPath.exists()) return@call suspendCoroutine { res ->
-      Logger.trace { "TmpFile exists,waiting for the file downloading" }
+      Logger.trace("TmpFile exists,waiting for the file downloading")
       Res.waitFor(id) { res.resume(it) }
     }
 
-    Logger.trace { "TmpFile dont exists,requesting url" }
+    Logger.trace("TmpFile dont exists,requesting url")
     val packet = Event(EventType.RequestImage(id)).toCipherPacket()
     val response = Server.request(address, packet, Server.LibHeader).getOrThrow()
 
@@ -75,32 +74,32 @@ object Cache : CoroutineScope {
     id: String,
     url: String
   ): Result<Path> = runCatching call@{
-    Logger.debug { "Cache by url $url" }
+    Logger.debug("Cache by url $url")
     val path = Res.path(id)
     if (path.exists()) {
-      Logger.trace { "File exists,return the path" }
+      Logger.trace("File exists,return the path")
       return@call path
     }
     val tmpPath = Res.tmpPath(id)
     if (tmpPath.exists()) {
-      Logger.trace { "TmpFile exists,waiting for the file downloading" }
+      Logger.trace("TmpFile exists,waiting for the file downloading")
       suspendCoroutine { res ->
         Res.waitFor(id) { res.resume(it) }
       }
     } else {
-      Logger.trace { "TmpFile dont exist" }
-      Logger.trace { "Downloading pic" }
+      Logger.trace("TmpFile dont exist")
+      Logger.trace("Downloading pic")
       downloadFile(url, tmpPath.toFile(), httpProxy)
-      Logger.trace { "Download successfully" }
+      Logger.trace("Download successfully")
       put(id, tmpPath)
       path
     }
   }
   fun put(name: String, file: Path): Result<Path> = runCatching {
-    Logger.trace { "Put $name" }
+    Logger.trace("Put $name")
     val path = Res.path(name)
     file.moveTo(path)
-    Logger.trace { "Move $file to $path" }
+    Logger.trace("Move $file to $path")
     path
   }
   override val coroutineContext: CoroutineContext
