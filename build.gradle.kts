@@ -1,6 +1,6 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.5.10"
-  kotlin("plugin.serialization") version "1.5.10"
+  id("org.jetbrains.kotlin.jvm") version "1.5.21"
+  kotlin("plugin.serialization") version "1.5.21"
   maven
   `java-library`
   `maven-publish` // Jitpack
@@ -36,11 +36,8 @@ dependencies {
   implementation("org.rocksdb:rocksdbjni:6.22.1.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.3.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.2.2")
   implementation("io.nats:jnats:2.12.0")
   implementation("io.arrow-kt:arrow-core:1.0.0")
   implementation("org.bouncycastle:bcprov-jdk15on:1.69")
-  implementation("org.tinylog:tinylog-api-kotlin:2.4.0-M1") {
-    isTransitive = false
-  }
 }
