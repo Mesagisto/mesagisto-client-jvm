@@ -19,7 +19,7 @@ jobs:
           cache: 'gradle'
 
       - name: Gradle build
-        run: ./gradlew install publishToMavenLocal
+        run: ./gradlew publishToMavenLocal
 
       - name: Auto release
         uses: "marvinpinto/action-automatic-releases@latest"
