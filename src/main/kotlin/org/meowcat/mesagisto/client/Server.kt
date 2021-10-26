@@ -20,20 +20,20 @@ import kotlin.coroutines.CoroutineContext
 object Server : CoroutineScope {
   private lateinit var Address: String
   private val NC: Connection by lazy {
-    Logger.info ( "Trying to connect to nats server: $Address" )
+    Logger.info { ("Trying to connect to nats server: $Address") }
     val nc = runCatching {
       Nats.connect(Address)
     }.recoverCatching {
       when (it) {
         is IOException -> {
-          Logger.info ( "Failed to connection,auto retrying..." )
+          Logger.info { "Failed to connection,auto retrying..." }
           Nats.connect(Address)
         }
         else -> throw it
       }
     }.getOrThrow()
 
-    Logger.info ( "Connect nats successfully" )
+    Logger.info { "Connect nats successfully" }
     return@lazy nc
   }
   private val CID by lazy { NC.serverInfo.clientId.toString() }
@@ -78,26 +78,26 @@ object Server : CoroutineScope {
           .build()
       )
     }
-    Logger.trace ( "Trying to create sub for $target" )
+    Logger.trace { "Trying to create sub for $target" }
     Endpoint.getOrPut(target) {
       val compatAddress = compatAddress(address)
-      Logger.trace ( "Creating sub on $compatAddress for $target with compatibility" )
+      Logger.trace { "Creating sub on $compatAddress for $target with compatibility" }
       Dispatcher.asyncSubscribe(compatAddress) sub@{ msg ->
         if (msg.headers["meta"].contains("cid=$CID")) return@sub
         if (msg.headers["meta"].contains("lib")) {
-          Logger.debug ( "Handling message sent by lib" )
+          Logger.debug { "Handling message sent by lib" }
           when (val packet = Packet.fromCbor(msg.data).getOrThrow()) {
             is Either.Right -> {
               when (val kind = packet.value.data) {
                 is EventType.RequestImage -> {
-                  Logger.trace ( "Received request image event" )
+                  Logger.trace { "Received request image event" }
                   val url = Res.getPhotoUrl(kind.id) ?: run {
-                    Logger.trace ( "Cannot get image url" )
+                    Logger.trace { "Cannot get image url" }
                     return@sub
                   }
-                  Logger.trace ( "got image url" )
+                  Logger.trace { "got image url" }
                   val event = EventType.RespondImage(kind.id, url).toEvent()
-                  Logger.trace ( "Creating response" )
+                  Logger.trace { "Creating response" }
                   val cborBytes = Packet.from(event.right()).toCbor()
                   withContext(Dispatchers.IO) {
                     NC.publish(
@@ -115,7 +115,7 @@ object Server : CoroutineScope {
           }
           return@sub
         }
-        Logger.trace( "Received message of target $target" )
+        Logger.trace { "Received message of target $target" }
         handler(msg, target).onFailure { err ->
           Logger.error(err)
         }

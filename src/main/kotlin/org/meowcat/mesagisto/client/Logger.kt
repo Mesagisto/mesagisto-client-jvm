@@ -11,33 +11,33 @@ object Logger {
   var level: LogLevel = LogLevel.TRACE
   var provider: ILogger? = null
 
-  inline fun trace(msg: String) {
+  inline fun trace(msg: () -> String) {
     if (level >= LogLevel.TRACE) {
-      provider?.log(LogLevel.TRACE, msg) ?: println(msg)
+      provider?.log(LogLevel.TRACE, msg()) ?: println(msg())
     }
   }
 
-  inline fun debug(msg: String) {
+  inline fun debug(msg: () -> String) {
     if (level >= LogLevel.DEBUG) {
-      provider?.log(LogLevel.DEBUG, msg) ?: println(msg)
+      provider?.log(LogLevel.DEBUG, msg()) ?: println(msg())
     }
   }
 
-  inline fun info(msg: String) {
+  inline fun info(msg: () -> String) {
     if (level >= LogLevel.INFO) {
-      provider?.log(LogLevel.INFO, msg) ?: println(msg)
+      provider?.log(LogLevel.INFO, msg()) ?: println(msg())
     }
   }
 
-  inline fun warn(msg: String) {
+  inline fun warn(msg: () -> String) {
     if (level >= LogLevel.WARN) {
-      provider?.log(LogLevel.WARN, msg) ?: println(msg)
+      provider?.log(LogLevel.WARN, msg()) ?: println(msg())
     }
   }
 
-  inline fun error(msg: String) {
+  inline fun error(msg: () -> String) {
     if (level >= LogLevel.ERROR) {
-      provider?.log(LogLevel.ERROR, msg) ?: println(msg)
+      provider?.log(LogLevel.ERROR, msg()) ?: println(msg())
     }
   }
   inline fun error(e: Throwable) {
