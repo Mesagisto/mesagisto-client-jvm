@@ -1,7 +1,6 @@
 plugins {
   id("org.jetbrains.kotlin.jvm") version "1.5.21"
   kotlin("plugin.serialization") version "1.5.21"
-  maven
   `java-library`
   `maven-publish` // Jitpack
 }
@@ -15,7 +14,7 @@ publishing {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.0.5"
+      version = "1.0.6"
     }
   }
 }
@@ -24,17 +23,15 @@ repositories {
   google()
   maven("https://jitpack.io")
 }
-tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-    kotlinOptions {
-      jvmTarget = "1.8"
-      freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
-    }
-    sourceCompatibility = "1.8"
+tasks.compileKotlin {
+  kotlinOptions {
+    jvmTarget = "1.8"
+    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
   }
+  sourceCompatibility = "1.8"
 }
+
 dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation("org.rocksdb:rocksdbjni:6.22.1.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
