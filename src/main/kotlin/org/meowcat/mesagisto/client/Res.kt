@@ -9,14 +9,15 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
 object Res : CoroutineScope {
-  private var Directory = when (System.getProperty("os.name").lowercase()) {
-    "windows" -> Path("%temp%/mesagisto")
-    else -> Path("/tmp/mesagisto")
-  }.apply {
-    runCatching {
-      // fixme
-      createDirectory()
+  private var Directory = run {
+    val os = System.getProperty("os.name").lowercase()
+    if (os.startsWith("win")) {
+      Path("%temp%/mesagisto")
+    } else {
+      Path("/tmp/mesagisto")
     }
+  }.apply {
+    createDirectories()
   }
   private val watcher = FileSystems.getDefault().newWatchService().apply {
     Directory.register(this, StandardWatchEventKinds.ENTRY_CREATE)
