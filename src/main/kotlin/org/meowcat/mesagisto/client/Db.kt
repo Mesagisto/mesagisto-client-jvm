@@ -4,6 +4,7 @@ package org.meowcat.mesagisto.client
 import org.rocksdb.* // ktlint-disable no-wildcard-imports
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
 
 object Db : AutoCloseable {
   private val imageUrlDb by lazy {
@@ -37,7 +38,7 @@ object Db : AutoCloseable {
       Logger.trace { "Message id db not found,creating a new one" }
       val options = Options()
         .setCreateIfMissing(true)
-      Path("db/$dbName/msg-id").ensureDirectories()
+      Path("db/$dbName/msg-id").createDirectories()
       RocksDB.open(options, "db/$dbName/msg-id/${Base64.encodeToString(target)}")
     }
     msgIdDb.put(uid, id)

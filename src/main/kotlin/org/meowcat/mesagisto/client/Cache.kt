@@ -89,7 +89,7 @@ object Cache : CoroutineScope {
     } else {
       Logger.trace { "TmpFile dont exist" }
       Logger.trace { "Downloading pic" }
-      downloadFile(url, tmpPath.toFile(), httpProxy)
+      downloadFile(url, tmpPath, httpProxy)
       Logger.trace { "Download successfully" }
       put(id, tmpPath)
       path
