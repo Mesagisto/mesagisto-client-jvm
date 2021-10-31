@@ -12,8 +12,10 @@ object Res : CoroutineScope {
   private var Directory = Path(System.getProperty("java.io.tmpdir"))
     .resolve("mesagisto")
     .apply { createDirectories() }
-  private val watcher = FileSystems.getDefault().newWatchService().apply {
-    Directory.register(this, StandardWatchEventKinds.ENTRY_CREATE)
+  private val watcher by lazy {
+    FileSystems.getDefault().newWatchService().apply {
+      Directory.register(this, StandardWatchEventKinds.ENTRY_CREATE)
+    }
   }
 
   private val handlers = ConcurrentHashMap<String, HashSet<(Path) -> Unit>>()
@@ -73,20 +75,27 @@ object Res : CoroutineScope {
     val path = path(name)
     val tmpPath = tmpPath(name)
     runInterruptible {
-      val convertPath = path("convert-$name")
-      convertPath.deleteIfExists()
-      tmpPath.createFile()
-      path.moveTo(convertPath)
-    }
+      runCatching {
+        val convertPath = path("convert-$name")
+        tmpPath.createFile()
+        path.moveTo(convertPath, true)
+        Unit
+      }.onFailure {
+        it.printStackTrace()
+      }
+    }.getOrThrow()
     Logger.trace { "invoking converter" }
     converter.invoke(path("convert-$name"), tmpPath).onFailure {
       Logger.error(it)
     }
     runInterruptible {
-      tmpPath.moveTo(path)
-      path("convert-$name").deleteIfExists()
-    }
-    Logger.trace { "invoking successfully" }
+      runCatching {
+        tmpPath.moveTo(path, true)
+        path("convert-$name").deleteIfExists()
+        Unit
+      }
+    }.getOrThrow()
+    Logger.trace { "invoke successfully" }
   }
   fun storePhotoId(uid: String, fileId: String = "") {
     Db.putImageId(uid, fileId)
