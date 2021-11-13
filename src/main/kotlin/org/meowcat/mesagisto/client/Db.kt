@@ -22,11 +22,10 @@ object Db : AutoCloseable {
     // specific class's(a field:NativeLibraryLoader) classloader
     RocksDB.loadLibrary()
   }
-  fun putImageId(uid: String, fileId: String = "") =
-    imageUrlDb.put(uid.toByteArray(), fileId.toByteArray())
+  fun putImageId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) =
+    imageUrlDb.put(uid, fileId)
 
-  fun getImageId(uid: String): String? =
-    imageUrlDb.get(uid.toByteArray())?.toString(charset = Charsets.UTF_8)
+  fun getImageId(uid: ByteArray): ByteArray? = imageUrlDb.get(uid)
 
   fun putMsgId(
     target: ByteArray,
@@ -46,18 +45,7 @@ object Db : AutoCloseable {
       msgIdDb.put(id, uid)
     }
   }
-  fun putMsgId(
-    target: Long,
-    uid: Int,
-    id: Int,
-    reverse: Boolean = true
-  ) = putMsgId(target.toByteArray(), uid.toByteArray(), id.toByteArray(), reverse)
-  fun putMsgId(
-    target: Long,
-    uid: ByteArray,
-    id: Int,
-    reverse: Boolean = true
-  ) = putMsgId(target.toByteArray(), uid, id.toByteArray(), reverse)
+
   fun getMsgId(
     target: ByteArray,
     id: ByteArray
@@ -65,20 +53,6 @@ object Db : AutoCloseable {
     val msgIdDb = midDbMap[target.contentHashCode()] ?: return null
     return msgIdDb[id]
   }
-  inline fun getMsgId(
-    target: Long,
-    id: Int
-  ): ByteArray? = getMsgId(target.toByteArray(), id.toByteArray())
-
-  inline fun getMsgId(
-    target: Long,
-    id: ByteArray
-  ): ByteArray? = getMsgId(target.toByteArray(), id)
-
-  inline fun getMsgIdAsI32(
-    target: Long,
-    id: ByteArray
-  ): Int? = getMsgId(target, id)?.toI32()
 
   override fun close() {
     imageUrlDb.close()

@@ -23,7 +23,8 @@ data class Message @OptIn(ExperimentalSerializationApi::class) constructor(
 
 @Serializable
 data class Profile(
-  val id: Long,
+  @ByteString
+  val id: ByteArray,
   val username: String? = null,
   val nick: String? = null,
 )

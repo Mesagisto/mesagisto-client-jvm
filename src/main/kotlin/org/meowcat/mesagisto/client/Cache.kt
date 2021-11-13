@@ -31,7 +31,7 @@ object Cache : CoroutineScope {
     val file = Res.path(name)
     if (file.exists()) Some(file) else None
   }
-  suspend fun file(id: String, url: String?, address: String): Result<Path> {
+  suspend fun file(id: ByteArray, url: String?, address: String): Result<Path> {
     return if (url == null) {
       fileById(id, address)
     } else {
@@ -39,30 +39,31 @@ object Cache : CoroutineScope {
     }
   }
   suspend fun fileById(
-    id: String,
+    id: ByteArray,
     address: String,
   ): Result<Path> = runCatching call@{
-    Logger.debug { "Cache by id $id" }
-    val path = Res.path(id)
+    val idStr = Base64.encodeToString(id)
+    Logger.debug { "Cache by id $idStr" }
+    val path = Res.path(idStr)
     if (path.exists()) {
       Logger.trace { "File exists,return the path" }
       return@call path
     }
-    val tmpPath = Res.tmpPath(id)
+    val tmpPath = Res.tmpPath(idStr)
 
     if (tmpPath.exists()) return@call suspendCoroutine { res ->
       Logger.trace { "TmpFile exists,waiting for the file downloading" }
-      Res.waitFor(id) { res.resume(it) }
+      Res.waitFor(idStr) { res.resume(it) }
     }
 
     Logger.trace { "TmpFile dont exists,requesting url" }
-    val packet = Event(EventType.RequestImage(id)).toCipherPacket()
+    val packet = Event(EventType.RequestImage(id)).toPacket()
     val response = Server.request(address, packet, Server.LibHeader).getOrThrow()
 
     return@call when (val rPacket = Packet.fromCbor(response.data).getOrThrow()) {
       is Either.Right -> {
         val event = rPacket.value.data
-        if (event !is EventType.RespondImage) error("Not correct response")
+        if (event !is EventType.RespondImage) error("Not correct response.")
         fileByUrl(event.id, event.url).getOrThrow()
       }
       is Either.Left -> {
@@ -71,27 +72,27 @@ object Cache : CoroutineScope {
     }
   }
   suspend fun fileByUrl(
-    id: String,
+    id: ByteArray,
     url: String
   ): Result<Path> = runCatching call@{
-    Logger.debug { "Cache by url $url" }
-    val path = Res.path(id)
+    val idStr = Base64.encodeToString(id)
+    Logger.debug { "Cache by url $url." }
+    val path = Res.path(idStr)
     if (path.exists()) {
-      Logger.trace { "File exists,return the path" }
+      Logger.trace { "File exists,return the path." }
       return@call path
     }
-    val tmpPath = Res.tmpPath(id)
+    val tmpPath = Res.tmpPath(idStr)
     if (tmpPath.exists()) {
-      Logger.trace { "TmpFile exists,waiting for the file downloading" }
+      Logger.trace { "TmpFile exists,waiting for the file downloading." }
       suspendCoroutine { res ->
-        Res.waitFor(id) { res.resume(it) }
+        Res.waitFor(idStr) { res.resume(it) }
       }
     } else {
-      Logger.trace { "TmpFile dont exist" }
-      Logger.trace { "Downloading pic" }
+      Logger.trace { "TmpFile dont exist.\nDownloading pic." }
       downloadFile(url, tmpPath, httpProxy)
       Logger.trace { "Download successfully" }
-      put(id, tmpPath)
+      put(idStr, tmpPath)
       path
     }
   }

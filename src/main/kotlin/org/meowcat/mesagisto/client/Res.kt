@@ -54,13 +54,13 @@ object Res : CoroutineScope {
   fun waitFor(name: String, handler: (Path) -> Unit) {
     handlers.getOrPut(name) { HashSet() }.add(handler)
   }
-  private lateinit var photoUrlResolver: suspend (String, String) -> Result<String>
+  private lateinit var photoUrlResolver: suspend (ByteArray, ByteArray) -> Result<String>
   fun resolvePhotoUrl(
-    f: suspend (String, String) -> Result<String>
+    f: suspend (ByteArray, ByteArray) -> Result<String>
   ) {
     photoUrlResolver = f
   }
-  suspend fun getPhotoUrl(uid: String): String? {
+  suspend fun getPhotoUrl(uid: ByteArray): String? {
     Logger.trace { "Getting url by id" }
     val fileId = Db.getImageId(uid) ?: return null
     Logger.trace { "Gotten photo id" }
@@ -97,7 +97,7 @@ object Res : CoroutineScope {
     }.getOrThrow()
     Logger.trace { "invoke successfully" }
   }
-  fun storePhotoId(uid: String, fileId: String = "") {
+  fun storePhotoId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) {
     Db.putImageId(uid, fileId)
   }
   override val coroutineContext: CoroutineContext

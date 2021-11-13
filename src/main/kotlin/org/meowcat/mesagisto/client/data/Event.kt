@@ -3,6 +3,7 @@ package org.meowcat.mesagisto.client.data
 
 import arrow.core.right
 import kotlinx.serialization.* // ktlint-disable no-wildcard-imports
+import kotlinx.serialization.cbor.ByteString
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -19,29 +20,27 @@ sealed class EventType {
   @Serializable
   @SerialName("request_image")
   data class RequestImage(
-    val id: String,
+    @ByteString
+    val id: ByteArray,
   ) : EventType()
 
   @Serializable
   @SerialName("respond_image")
   data class RespondImage(
-    val id: String,
+    @ByteString
+    val id: ByteArray,
     val url: String
   ) : EventType()
   fun toEvent(): Event = Event(this)
 }
 
 object FixedEventSerializer : KSerializer<EventType> {
-
-  @OptIn(ExperimentalSerializationApi::class)
   override var descriptor: SerialDescriptor = buildClassSerialDescriptor(
     EventType.serializer().descriptor.serialName
   ) {
     element<String>("t")
     element<String>("c")
   }
-
-  @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
   override fun serialize(encoder: Encoder, value: EventType) = when (value) {
     is EventType.RequestImage -> {
       encoder.encodeStructure(descriptor) {
@@ -56,8 +55,6 @@ object FixedEventSerializer : KSerializer<EventType> {
       }
     }
   }
-
-  @OptIn(ExperimentalSerializationApi::class)
   override fun deserialize(decoder: Decoder): EventType = decoder.decodeStructure(descriptor) {
     var t = ""
     var res: EventType? = null
@@ -82,4 +79,3 @@ object FixedEventSerializer : KSerializer<EventType> {
 }
 
 fun Event.toPacket(): Packet = Packet.from(this.right())
-fun Event.toCipherPacket(): Packet = Packet.encryptFrom(this.right())
