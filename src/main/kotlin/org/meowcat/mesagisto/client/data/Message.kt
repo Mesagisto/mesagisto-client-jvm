@@ -10,7 +10,6 @@ import kotlinx.serialization.encoding.* // ktlint-disable no-wildcard-imports
 import kotlinx.serialization.encoding.Encoder
 
 fun Message.toPacket(): Packet = Packet.from(this.left())
-fun Message.toCipherPacket(): Packet = Packet.encryptFrom(this.left())
 
 @Serializable
 data class Message(

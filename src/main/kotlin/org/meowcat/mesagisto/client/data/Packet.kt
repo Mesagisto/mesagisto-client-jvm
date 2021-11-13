@@ -23,6 +23,13 @@ data class Packet(
 
   companion object Factory {
     fun from(data: Either<Message, Event>): Packet {
+      return if (Cipher.ENABLE) {
+        encryptFrom(data)
+      } else {
+        plainFrom(data)
+      }
+    }
+    private fun plainFrom(data: Either<Message, Event>): Packet {
       val ty: String
       val bytes = when (data) {
         is Either.Left -> {
@@ -41,7 +48,7 @@ data class Packet(
         "v1"
       )
     }
-    fun encryptFrom(data: Either<Message, Event>): Packet {
+    private fun encryptFrom(data: Either<Message, Event>): Packet {
       val nonce = Cipher.newNonce()
       val ty: String
       val bytes = when (data) {
@@ -84,7 +91,7 @@ data class Packet(
           if (Cipher.ENABLE && !Cipher.REFUSE_PLAIN) {
             val event: Event = Cbor.decodeFromByteArray(packet.content)
             Either.Right(event)
-          }else {
+          } else {
             throw IllegalStateException("Refuse plain messages")
           }
         } else {
