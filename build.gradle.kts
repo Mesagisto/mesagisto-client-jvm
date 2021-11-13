@@ -7,6 +7,9 @@ plugins {
 java {
   withJavadocJar()
   withSourcesJar()
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(8))
+  }
 }
 publishing {
   publications {
