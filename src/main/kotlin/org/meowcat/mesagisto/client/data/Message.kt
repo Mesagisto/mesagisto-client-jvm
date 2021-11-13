@@ -1,4 +1,5 @@
 @file:Suppress("ArrayInDataClass", "unused")
+@file:OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 package org.meowcat.mesagisto.client.data
 
 import arrow.core.left
@@ -12,7 +13,7 @@ fun Message.toPacket(): Packet = Packet.from(this.left())
 fun Message.toCipherPacket(): Packet = Packet.encryptFrom(this.left())
 
 @Serializable
-data class Message @OptIn(ExperimentalSerializationApi::class) constructor(
+data class Message(
   val profile: Profile,
   @ByteString
   val id: ByteArray,
@@ -48,15 +49,12 @@ sealed class MessageType {
 
 object FixedMessageSerializer : KSerializer<MessageType> {
 
-  @OptIn(ExperimentalSerializationApi::class)
   override var descriptor: SerialDescriptor = buildClassSerialDescriptor(
     MessageType.serializer().descriptor.serialName
   ) {
     element<String>("t")
     element<String>("c")
   }
-
-  @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
   override fun serialize(encoder: Encoder, value: MessageType) = when (value) {
     is MessageType.Text -> {
       encoder.encodeStructure(descriptor) {
@@ -71,8 +69,6 @@ object FixedMessageSerializer : KSerializer<MessageType> {
       }
     }
   }
-
-  @OptIn(ExperimentalSerializationApi::class)
   override fun deserialize(decoder: Decoder): MessageType = decoder.decodeStructure(descriptor) {
     var t = ""
     var res: MessageType? = null

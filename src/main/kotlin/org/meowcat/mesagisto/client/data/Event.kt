@@ -1,4 +1,5 @@
 @file:Suppress("ArrayInDataClass", "unused")
+@file:OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 package org.meowcat.mesagisto.client.data
 
 import arrow.core.right

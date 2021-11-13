@@ -1,5 +1,5 @@
 @file:Suppress("ArrayInDataClass")
-
+@file:OptIn(ExperimentalSerializationApi::class)
 package org.meowcat.mesagisto.client.data
 
 import arrow.core.Either
@@ -8,7 +8,6 @@ import kotlinx.serialization.cbor.ByteString
 import org.meowcat.mesagisto.client.Cbor
 import org.meowcat.mesagisto.client.Cipher
 
-@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class Packet(
   val type: String,
