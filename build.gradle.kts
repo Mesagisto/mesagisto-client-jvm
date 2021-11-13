@@ -40,9 +40,9 @@ dependencies {
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.1")
   compileOnly("io.ktor:ktor-client-core:1.5.4")
   implementation("io.ktor:ktor-client-cio-jvm:1.5.4")
-  implementation("org.rocksdb:rocksdbjni:6.22.1.1")
+  implementation("org.rocksdb:rocksdbjni:6.25.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.2.2")
-  implementation("io.nats:jnats:2.12.0")
+  implementation("io.nats:jnats:2.13.1")
   implementation("io.arrow-kt:arrow-core:1.0.0")
   implementation("org.bouncycastle:bcprov-jdk15on:1.69")
 }
