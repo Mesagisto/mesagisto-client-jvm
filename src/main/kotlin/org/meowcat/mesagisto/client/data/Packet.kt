@@ -78,10 +78,10 @@ data class Packet(
       if (packet.type == "message") {
         if (packet.encrypt == null) {
           if (Cipher.ENABLE && !Cipher.REFUSE_PLAIN) {
+            throw IllegalStateException("Refuse plain messages")
+          } else {
             val message = Cbor.decodeFromByteArray<Message>(packet.content)
             Either.Left(message)
-          } else {
-            throw IllegalStateException("Refuse plain messages")
           }
         } else {
           handleEncrypt(packet, true).getOrThrow()
@@ -89,10 +89,10 @@ data class Packet(
       } else if (packet.type == "event") {
         if (packet.encrypt == null) {
           if (Cipher.ENABLE && !Cipher.REFUSE_PLAIN) {
+            throw IllegalStateException("Refuse plain messages")
+          } else {
             val event: Event = Cbor.decodeFromByteArray(packet.content)
             Either.Right(event)
-          } else {
-            throw IllegalStateException("Refuse plain messages")
           }
         } else {
           handleEncrypt(packet, false).getOrThrow()
