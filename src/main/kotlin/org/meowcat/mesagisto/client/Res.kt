@@ -68,15 +68,16 @@ object Res : CoroutineScope {
     return photoUrlResolver(uid, fileId).getOrNull()
   }
   suspend fun convertFile(
-    name: String,
+    id: ByteArray,
     converter: suspend (Path, Path) -> Result<Unit>
   ): Result<Unit> = runCatching {
+    val idStr = Base64.encodeToString(id)
     Logger.trace { "converting lib" }
-    val path = path(name)
-    val tmpPath = tmpPath(name)
+    val path = path(idStr)
+    val tmpPath = tmpPath(idStr)
     runInterruptible {
       runCatching {
-        val convertPath = path("convert-$name")
+        val convertPath = path("convert-$idStr")
         tmpPath.createFile()
         path.moveTo(convertPath, true)
         Unit
@@ -85,13 +86,13 @@ object Res : CoroutineScope {
       }
     }.getOrThrow()
     Logger.trace { "invoking converter" }
-    converter.invoke(path("convert-$name"), tmpPath).onFailure {
+    converter.invoke(path("convert-$idStr"), tmpPath).onFailure {
       Logger.error(it)
     }
     runInterruptible {
       runCatching {
         tmpPath.moveTo(path, true)
-        path("convert-$name").deleteIfExists()
+        path("convert-$idStr").deleteIfExists()
         Unit
       }
     }.getOrThrow()

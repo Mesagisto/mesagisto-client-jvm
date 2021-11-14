@@ -41,7 +41,8 @@ sealed class MessageType {
   @SerialName("image")
   class Image(
     // unique id supplied by platform
-    val id: String,
+    @ByteString
+    val id: ByteArray,
     val url: String? = null,
   ) : MessageType()
 }
