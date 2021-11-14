@@ -58,8 +58,8 @@ object Server : CoroutineScope {
   fun compatAddress(address: String): String =
     CompatAddress.getOrPut(address) {
       val digest = MessageDigest.getInstance("SHA-256")
-      val compatAddress = digest.digest("$address${Cipher.RAW_KEY}".toByteArray())
-      "compat.${Base64.encodeToString(compatAddress)}"
+      val sha256Address = digest.digest(Cipher.uniqueAddress(address).toByteArray())
+      "compat.${Base64.encodeToString(sha256Address)}"
     }
 
   suspend fun sendAndRegisterReceive(

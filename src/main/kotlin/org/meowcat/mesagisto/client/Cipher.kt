@@ -61,4 +61,11 @@ object Cipher {
     }
     return plainBytes
   }
+  fun uniqueAddress(address: String): String {
+    return if (ENABLE) {
+      "$address$rawKey"
+    } else {
+      address
+    }
+  }
 }
