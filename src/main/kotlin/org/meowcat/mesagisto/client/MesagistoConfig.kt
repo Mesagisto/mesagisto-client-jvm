@@ -7,6 +7,8 @@ class MesagistoConfig {
   var cipherKey: String = ""
   var cipherRefusePlain: Boolean = true
   var resolvePhotoUrl: (suspend (ByteArray, ByteArray) -> Result<String>)? = null
+  var proxyEnable = false
+  var proxyUri = "http://127.0.0.1:7890"
 
   fun apply() {
     if (cipherEnable) {
@@ -22,6 +24,9 @@ class MesagistoConfig {
       }
     } else {
       Res.resolvePhotoUrl(resolvePhotoUrl!!)
+    }
+    if (proxyEnable) {
+      Net.setProxy(proxyUri)
     }
   }
 

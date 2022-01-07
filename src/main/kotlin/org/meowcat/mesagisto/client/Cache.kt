@@ -7,9 +7,6 @@ import arrow.core.Option
 import arrow.core.Some
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import org.meowcat.mesagisto.client.data.* // ktlint-disable no-wildcard-imports
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.URI
 import java.nio.file.* // ktlint-disable no-wildcard-imports
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -17,15 +14,6 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
 object Cache : CoroutineScope {
-  private val httpProxy by lazy {
-    val uri = URI("http://127.0.0.1:7890")
-    val type = when (uri.scheme) {
-      "http" -> Proxy.Type.HTTP
-      "socks" -> Proxy.Type.SOCKS
-      else -> Proxy.Type.DIRECT
-    }
-    Proxy(type, InetSocketAddress(uri.host, uri.port))
-  }
 
   fun get(name: String): Result<Option<Path>> = runCatching {
     val file = Res.path(name)
@@ -43,7 +31,7 @@ object Cache : CoroutineScope {
     address: String,
   ): Result<Path> = runCatching call@{
     val idStr = Base64.encodeToString(id)
-    Logger.debug { "Cache by id $idStr" }
+    Logger.debug { "Cache file by id $idStr" }
     val path = Res.path(idStr)
     if (path.exists()) {
       Logger.trace { "File exists,return the path" }
@@ -63,11 +51,11 @@ object Cache : CoroutineScope {
     return@call when (val rPacket = Packet.fromCbor(response.data).getOrThrow()) {
       is Either.Right -> {
         val event = rPacket.value.data
-        if (event !is EventType.RespondImage) error("Not correct response.")
+        if (event !is EventType.RespondImage) error("Incorrect response.")
         fileByUrl(event.id, event.url).getOrThrow()
       }
       is Either.Left -> {
-        error("Not correct response")
+        error("Incorrect response")
       }
     }
   }
@@ -89,9 +77,9 @@ object Cache : CoroutineScope {
         Res.waitFor(idStr) { res.resume(it) }
       }
     } else {
-      Logger.trace { "TmpFile dont exist.\nDownloading pic." }
-      downloadFile(url, tmpPath, httpProxy)
-      Logger.trace { "Download successfully" }
+      Logger.trace { "TmpFile don't exist. Trying download pic." }
+      Net.downloadFile(url, tmpPath)
+      Logger.trace { "Download pic successfully" }
       put(idStr, tmpPath)
       path
     }
