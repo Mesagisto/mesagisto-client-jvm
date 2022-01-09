@@ -17,7 +17,7 @@ publishing {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.1.0"
+      version = "1.1.1"
     }
   }
 }
@@ -35,7 +35,7 @@ tasks.compileKotlin {
 }
 
 dependencies {
-  compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.1")
   compileOnly("io.ktor:ktor-client-core:1.5.4")
