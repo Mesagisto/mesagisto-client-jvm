@@ -34,7 +34,7 @@ object Db : AutoCloseable {
     reverse: Boolean = true
   ) {
     val msgIdDb = midDbMap.getOrPut(target.contentHashCode()) {
-      Logger.trace { "Message id db not found,creating a new one" }
+      Logger.trace { "未发现消息ID数据库,正在创建..." }
       val options = Options()
         .setCreateIfMissing(true)
       Path("db/$dbName/msg-id").createDirectories()

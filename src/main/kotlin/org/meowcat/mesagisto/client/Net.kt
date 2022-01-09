@@ -23,7 +23,7 @@ object Net {
 
   @OptIn(KtorExperimentalAPI::class)
   fun setProxy(proxyUri: String) {
-    Logger.info { "Setting mesagisto proxy to $proxyUri" }
+    Logger.info { "设置代理为 $proxyUri" }
     val proxy = run {
       val uri = URI(proxyUri)
       val type = when (uri.scheme) {

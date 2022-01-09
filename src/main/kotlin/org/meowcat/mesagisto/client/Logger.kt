@@ -40,5 +40,5 @@ object Logger {
       provider?.log(LogLevel.ERROR, msg()) ?: println(msg())
     }
   }
-  inline fun error(e: Throwable) = error { "Error ${e.message} \n ${e.stackTraceToString()}" }
+  inline fun error(e: Throwable) = error { "错误 ${e.message} \n ${e.stackTraceToString()}" }
 }

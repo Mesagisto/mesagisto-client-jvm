@@ -61,9 +61,7 @@ object Res : CoroutineScope {
     photoUrlResolver = f
   }
   suspend fun getPhotoUrl(uid: ByteArray): String? {
-    Logger.trace { "Getting url by id" }
     val fileId = Db.getImageId(uid) ?: return null
-    Logger.trace { "Gotten photo id" }
     // fixme
     return photoUrlResolver(uid, fileId).getOrNull()
   }
@@ -72,7 +70,6 @@ object Res : CoroutineScope {
     converter: suspend (Path, Path) -> Result<Unit>
   ): Result<Unit> = runCatching {
     val idStr = Base64.encodeToString(id)
-    Logger.trace { "converting lib" }
     val path = path(idStr)
     val tmpPath = tmpPath(idStr)
     runInterruptible {
@@ -85,7 +82,6 @@ object Res : CoroutineScope {
         it.printStackTrace()
       }
     }.getOrThrow()
-    Logger.trace { "invoking converter" }
     converter.invoke(path("convert-$idStr"), tmpPath).onFailure {
       Logger.error(it)
     }
@@ -96,7 +92,6 @@ object Res : CoroutineScope {
         Unit
       }
     }.getOrThrow()
-    Logger.trace { "invoke successfully" }
   }
   fun storePhotoId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) {
     Db.putImageId(uid, fileId)

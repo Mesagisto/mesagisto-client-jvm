@@ -39,3 +39,4 @@ fun ByteArray.toI32(): Int? =
     ByteBuffer.wrap(this)
       .getInt(0)
   }.getOrNull()
+

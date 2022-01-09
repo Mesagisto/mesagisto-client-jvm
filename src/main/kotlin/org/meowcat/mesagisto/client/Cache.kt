@@ -31,31 +31,31 @@ object Cache : CoroutineScope {
     address: String,
   ): Result<Path> = runCatching call@{
     val idStr = Base64.encodeToString(id)
-    Logger.debug { "Cache file by id $idStr" }
+    Logger.debug { "通过ID${idStr}缓存文件中" }
     val path = Res.path(idStr)
     if (path.exists()) {
-      Logger.trace { "File exists,return the path" }
+      Logger.trace { "文件存在,返回其路径" }
       return@call path
     }
     val tmpPath = Res.tmpPath(idStr)
 
     if (tmpPath.exists()) return@call suspendCoroutine { res ->
-      Logger.trace { "TmpFile exists,waiting for the file downloading" }
+      Logger.trace { "缓存文件存在,正在等待其下载完毕" }
       Res.waitFor(idStr) { res.resume(it) }
     }
 
-    Logger.trace { "TmpFile dont exists,requesting url" }
+    Logger.trace { "缓存文件不存在,正在请求其URL" }
     val packet = Event(EventType.RequestImage(id)).toPacket()
     val response = Server.request(address, packet, Server.LibHeader).getOrThrow()
 
     return@call when (val rPacket = Packet.fromCbor(response.data).getOrThrow()) {
       is Either.Right -> {
         val event = rPacket.value.data
-        if (event !is EventType.RespondImage) error("Incorrect response.")
+        if (event !is EventType.RespondImage) error("错误的响应")
         fileByUrl(event.id, event.url).getOrThrow()
       }
       is Either.Left -> {
-        error("Incorrect response")
+        error("错误的响应")
       }
     }
   }
@@ -64,31 +64,30 @@ object Cache : CoroutineScope {
     url: String
   ): Result<Path> = runCatching call@{
     val idStr = Base64.encodeToString(id)
-    Logger.debug { "Cache by url $url." }
+    Logger.debug { "通过URL${url}缓存文件." }
     val path = Res.path(idStr)
     if (path.exists()) {
-      Logger.trace { "File exists,return the path." }
+      Logger.trace { "文件存在,返回其路径" }
       return@call path
     }
     val tmpPath = Res.tmpPath(idStr)
     if (tmpPath.exists()) {
-      Logger.trace { "TmpFile exists,waiting for the file downloading." }
+      Logger.trace { "缓存文件存在,正在等待其下载完毕" }
       suspendCoroutine { res ->
         Res.waitFor(idStr) { res.resume(it) }
       }
     } else {
-      Logger.trace { "TmpFile don't exist. Trying download pic." }
+      Logger.trace { "缓存文件不存在,尝试下载图片" }
       Net.downloadFile(url, tmpPath)
-      Logger.trace { "Download pic successfully" }
+      Logger.trace { "成功下载图片" }
       put(idStr, tmpPath)
       path
     }
   }
   fun put(name: String, file: Path): Result<Path> = runCatching {
-    Logger.trace { "Put $name" }
     val path = Res.path(name)
     file.moveTo(path)
-    Logger.trace { "Move $file to $path" }
+    Logger.trace { "将缓存文件 $file 移动至 $path ..." }
     path
   }
   override val coroutineContext: CoroutineContext
