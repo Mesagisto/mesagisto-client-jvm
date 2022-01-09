@@ -1,7 +1,5 @@
 package org.meowcat.mesagisto.client
 
-import arrow.core.Either
-import arrow.core.right
 import io.nats.client.Connection
 import io.nats.client.Message
 import io.nats.client.Nats
@@ -10,8 +8,10 @@ import io.nats.client.impl.Headers
 import io.nats.client.impl.NatsMessage
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.future.await
+import org.meowcat.mesagisto.client.data.Either
 import org.meowcat.mesagisto.client.data.EventType
 import org.meowcat.mesagisto.client.data.Packet
+import org.meowcat.mesagisto.client.data.right
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap

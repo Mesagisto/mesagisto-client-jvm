@@ -1,10 +1,7 @@
 @file:Suppress("NOTHING_TO_INLINE", "unused", "MemberVisibilityCanBePrivate")
 package org.meowcat.mesagisto.client
 
-import arrow.core.Either
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
+
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import org.meowcat.mesagisto.client.data.* // ktlint-disable no-wildcard-imports
 import java.nio.file.* // ktlint-disable no-wildcard-imports
@@ -15,9 +12,9 @@ import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
 object Cache : CoroutineScope {
 
-  fun get(name: String): Result<Option<Path>> = runCatching {
+  fun get(name: String): Result<Path?> = runCatching {
     val file = Res.path(name)
-    if (file.exists()) Some(file) else None
+    if (file.exists()) file else null
   }
   suspend fun file(id: ByteArray, url: String?, address: String): Result<Path> {
     return if (url == null) {

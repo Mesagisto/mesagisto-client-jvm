@@ -2,7 +2,6 @@
 @file:OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 package org.meowcat.mesagisto.client.data
 
-import arrow.core.right
 import kotlinx.serialization.* // ktlint-disable no-wildcard-imports
 import kotlinx.serialization.cbor.ByteString
 import kotlinx.serialization.descriptors.SerialDescriptor

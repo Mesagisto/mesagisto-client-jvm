@@ -43,6 +43,5 @@ dependencies {
   implementation("org.rocksdb:rocksdbjni:6.25.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.2.2")
   implementation("io.nats:jnats:2.13.1")
-  implementation("io.arrow-kt:arrow-core:1.0.0")
   implementation("org.bouncycastle:bcprov-jdk15on:1.69")
 }
