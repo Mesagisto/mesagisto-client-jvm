@@ -21,7 +21,7 @@ data class Packet(
     return Cbor.encodeToByteArray(this)
   }
 
-  companion object Factory {
+  companion object {
     fun from(data: Either<Message, Event>): Packet {
       return if (Cipher.ENABLE) {
         encryptFrom(data)
@@ -116,3 +116,4 @@ data class Packet(
     }
   }
 }
+

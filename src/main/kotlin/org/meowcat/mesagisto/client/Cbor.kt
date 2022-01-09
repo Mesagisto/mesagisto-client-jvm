@@ -1,12 +1,13 @@
 package org.meowcat.mesagisto.client
 
-import kotlinx.serialization.* // ktlint-disable no-wildcard-imports
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
 
 @OptIn(ExperimentalSerializationApi::class)
 object Cbor {
 
-  @OptIn(InternalSerializationApi::class)
   val inner = Cbor {
     encodeDefaults = true
     ignoreUnknownKeys = true
