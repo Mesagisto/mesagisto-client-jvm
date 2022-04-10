@@ -12,12 +12,13 @@ import org.meowcat.mesagisto.client.data.Either
 import org.meowcat.mesagisto.client.data.EventType
 import org.meowcat.mesagisto.client.data.Packet
 import org.meowcat.mesagisto.client.data.right
+import java.io.Closeable
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
-object Server : CoroutineScope {
+object Server : CoroutineScope,Closeable {
   private lateinit var Address: String
   private val NC: Connection by lazy {
     Logger.info { ("正在尝试连接到NATS服务器: $Address") }
@@ -61,6 +62,11 @@ object Server : CoroutineScope {
       val sha256Address = digest.digest(Cipher.uniqueAddress(address).toByteArray())
       "compat.${Base64.encodeToString(sha256Address)}"
     }
+
+  override fun close() {
+    NC.closeDispatcher(Dispatcher)
+    NC.close()
+  }
 
   suspend fun sendAndRegisterReceive(
     target: Long,
