@@ -56,40 +56,54 @@ object Server : CoroutineScope,Closeable {
     NatsHeader
   }
 
-  fun compatAddress(address: String): String =
-    CompatAddress.getOrPut(address) {
-      val digest = MessageDigest.getInstance("SHA-256")
-      val sha256Address = digest.digest(Cipher.uniqueAddress(address).toByteArray())
-      "compat.${Base64.encodeToString(sha256Address)}"
+  fun uniqueAddress(address: String): String = uniqueAddress.getOrPut(address) {
+    val digest = MessageDigest.getInstance("SHA-256")
+    val uniqueAddress = if (Cipher.ENABLE) {
+      "$address${Cipher.rawKey}"
+    } else {
+      address
     }
+    val sha256Address = digest.digest(uniqueAddress.toByteArray())
+    Base64.encodeToString(sha256Address)
+  }
 
   override fun close() {
     NC.closeDispatcher(Dispatcher)
     NC.close()
   }
 
-  suspend fun sendAndRegisterReceive(
-    target: Long,
+  suspend fun send(
+    target: String,
     address: String,
     content: Packet,
     headers: Headers? = null,
-    handler: suspend (Message, Long) -> Result<Unit>
-  ): Unit = withContext(Dispatchers.Default) run@{
+  ) {
     withContext(Dispatchers.IO) {
       NC.publish(
         NatsMessage.builder()
           .data(Cbor.encodeToByteArray(content))
-          .subject(compatAddress(address))
-          .headers(headers ?: NatsHeader)
+          .subject(uniqueAddress(address))
+          .headers(
+            headers ?: NatsHeader.get().apply {
+              remove("meta")
+              add("meta", "sender=$target")
+            }
+          )
           .build()
       )
     }
+  }
+  suspend fun recv(
+    target: String,
+    address: String,
+    handler: suspend (Message, String) -> Result<Unit>
+  ) {
     Endpoint.getOrPut(target) {
-      val compatAddress = compatAddress(address)
-      Logger.trace { "为目标${target}创建向下兼容订阅中,兼容订阅地址为:$compatAddress " }
-      Dispatcher.asyncSubscribe(compatAddress) sub@{ msg ->
-        if (msg.headers["meta"].contains("cid=$CID")) return@sub
-        if (msg.headers["meta"].contains("lib")) {
+      val uniqueAddress = uniqueAddress(address)
+      Logger.trace { "为目标${target}创建订阅中,地址为:$uniqueAddress " }
+      Dispatcher.asyncSubscribe(uniqueAddress) subscribe@{ msg ->
+        if (msg.headers.isNotSelf(target)) return@subscribe
+        if (msg.headers.isRemoteLib(CID)) {
           Logger.debug { "正在处理由程序库发送的数据..." }
           when (val packet = Packet.fromCbor(msg.data).getOrThrow()) {
             is Either.Right -> {
@@ -126,6 +140,11 @@ object Server : CoroutineScope,Closeable {
       }
     }
   }
+  fun unsub(
+    target: String,
+  ) {
+    Endpoint.remove(target)?.unsubscribe()
+  }
 
   suspend fun request(
     address: String,
@@ -134,7 +153,7 @@ object Server : CoroutineScope,Closeable {
   ): Result<Message> = runCatching {
     withContext(Dispatchers.IO) {
       val message = NatsMessage(
-        compatAddress(address), null, headers ?: NatsHeader,
+        uniqueAddress(address), null, headers ?: NatsHeader.get(),
         Cbor.encodeToByteArray(content)
       )
       withTimeout(15_000L) {
@@ -142,6 +161,13 @@ object Server : CoroutineScope,Closeable {
       }
     }
   }
+
   override val coroutineContext: CoroutineContext
     get() = Dispatchers.Default
 }
+
+fun Headers.isNotSelf(target: String): Boolean =
+  !this["meta"].contains("sender=$target")
+
+fun Headers.isRemoteLib(cid: Int): Boolean =
+  this["meta"].contains("lib") && !this["meta"].contains("cid=$cid")
