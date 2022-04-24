@@ -21,7 +21,6 @@ import kotlin.io.path.outputStream
 object Net {
   private var HTTP_CLIENT = HttpClient(CIO)
 
-  @OptIn(KtorExperimentalAPI::class)
   fun setProxy(proxyUri: String) {
     Logger.info { "设置代理为 $proxyUri" }
     val proxy = run {
@@ -39,28 +38,27 @@ object Net {
       }
     }
   }
-  @OptIn(KtorExperimentalAPI::class)
+
   suspend fun downloadFile(
     urlStr: String,
     outputFile: Path,
   ) {
     HTTP_CLIENT.download(urlStr, outputFile)
   }
-  // from https://www.cnblogs.com/soclear/p/15167898.html
+
   private suspend fun HttpClient.download(
     url: String,
     file: Path
   ) = withContext(Dispatchers.IO) fn@{
-    this@download.get<HttpStatement>(url).execute { res ->
-      val channel: ByteReadChannel = res.receive()
-      val output = file.outputStream()
-      while (!channel.isClosedForRead) {
-        val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
-        if (!packet.isEmpty) {
-          output.writePacket(packet)
-        }
+    val res = this@download.get(url)
+    val channel: ByteReadChannel = res.bodyAsChannel()
+    val output = file.outputStream()
+    while (!channel.isClosedForRead) {
+      val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
+      if (!packet.isEmpty) {
+        output.writePacket(packet)
       }
-      output.close()
     }
+    output.close()
   }
 }
