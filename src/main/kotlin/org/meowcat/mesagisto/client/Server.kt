@@ -95,7 +95,7 @@ object Server : CoroutineScope, Closeable {
       val uniqueAddress = uniqueAddress(address)
       Logger.trace { "为目标${target}创建订阅中,地址为:$uniqueAddress " }
       Dispatcher.asyncSubscribe(uniqueAddress) subscribe@{ msg ->
-        if (msg.headers.isNotSelf(target)) return@subscribe
+        if (!msg.headers.isNotSelf(target)) return@subscribe
         if (msg.headers.isRemoteLib(CID)) {
           Logger.debug { "正在处理由程序库发送的数据..." }
           when (val packet = Packet.fromCbor(msg.data).getOrThrow()) {
@@ -136,7 +136,8 @@ object Server : CoroutineScope, Closeable {
   fun unsub(
     target: String,
   ) {
-    Endpoint.remove(target)?.unsubscribe()
+    val ep = Endpoint.remove(target) ?: return
+    Dispatcher.unsubscribe(ep)
   }
 
   suspend fun request(
