@@ -50,15 +50,16 @@ object Net {
     url: String,
     file: Path
   ) = withContext(Dispatchers.IO) fn@{
-    val res = this@download.get(url)
-    val channel: ByteReadChannel = res.bodyAsChannel()
-    val output = file.outputStream()
-    while (!channel.isClosedForRead) {
-      val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
-      if (!packet.isEmpty) {
-        output.writePacket(packet)
+    val res = this@download.get<HttpStatement>(url).execute {
+      val channel: ByteReadChannel = it.content
+      val output = file.outputStream()
+      while (!channel.isClosedForRead) {
+        val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
+        if (!packet.isEmpty) {
+          output.writePacket(packet)
+        }
       }
+      output.close()
     }
-    output.close()
   }
 }

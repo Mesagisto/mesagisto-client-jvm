@@ -38,8 +38,8 @@ dependencies {
 
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1-native-mt")
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.1-native-mt")
-  compileOnly("io.ktor:ktor-client-core:2.0.0")
-  implementation("io.ktor:ktor-client-cio-jvm:2.0.0")
+  compileOnly("io.ktor:ktor-client-core:1.6.8")
+  implementation("io.ktor:ktor-client-cio-jvm:1.6.8")
   implementation("org.rocksdb:rocksdbjni:7.0.4")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.3.2")
   implementation("io.nats:jnats:2.14.0")
