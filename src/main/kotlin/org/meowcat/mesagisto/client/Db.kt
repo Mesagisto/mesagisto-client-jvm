@@ -10,14 +10,14 @@ object Db : AutoCloseable {
   private val imageUrlDb by lazy {
     val options = Options()
       .setCreateIfMissing(true)
-    RocksDB.open(options, "db/$dbName/image_url_db")
+    RocksDB.open(options, "db/$name/image_url_db")
   }
   private val midDbMap by lazy { ConcurrentHashMap<Int, RocksDB>() }
 
-  private var dbName = "default"
+  var name = "default"
   // please pay attention to thread-context classloader here
   fun init(dbName: String) = runCatching {
-    this.dbName = dbName
+    this.name = dbName
     // rocksdb's classloader comes from its
     // specific class's(a field:NativeLibraryLoader) classloader
     RocksDB.loadLibrary()
@@ -37,8 +37,8 @@ object Db : AutoCloseable {
       Logger.trace { "未发现消息ID数据库,正在创建..." }
       val options = Options()
         .setCreateIfMissing(true)
-      Path("db/$dbName/msg-id").createDirectories()
-      RocksDB.open(options, "db/$dbName/msg-id/${Base64.encodeToString(target)}")
+      Path("db/$name/msg-id").createDirectories()
+      RocksDB.open(options, "db/$name/msg-id/${Base64.encodeToString(target)}")
     }
     msgIdDb.put(uid, id)
     if (reverse) {

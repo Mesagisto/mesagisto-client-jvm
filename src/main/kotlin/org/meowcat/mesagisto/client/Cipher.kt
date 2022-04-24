@@ -11,7 +11,7 @@ import kotlin.properties.Delegates
 
 object Cipher {
   private lateinit var key: KeyParameter
-  private lateinit var rawKey: String
+  lateinit var rawKey: String
   private val secureRandom: SecureRandom by lazy { SecureRandom() }
   var ENABLE by Delegates.notNull<Boolean>()
     private set

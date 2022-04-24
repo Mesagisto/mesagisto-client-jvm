@@ -18,42 +18,35 @@ import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
-object Server : CoroutineScope,Closeable {
-  private lateinit var Address: String
-  private val NC: Connection by lazy {
-    Logger.info { ("正在尝试连接到NATS服务器: $Address") }
-    val nc = runCatching {
-      Nats.connect(Address)
-    }.recoverCatching {
-      when (it) {
-        is IOException -> {
-          Logger.info { "连接失败,正在重生..." }
-          Nats.connect(Address)
-        }
-        else -> throw it
-      }
-    }.getOrThrow()
+object Server : CoroutineScope, Closeable {
+  private lateinit var NC: Connection
 
-    Logger.info { "成功连接到NATS服务器" }
-    return@lazy nc
-  }
-  private val CID by lazy { NC.serverInfo.clientId.toString() }
-  internal val NatsHeader by lazy {
-    Headers().add("meta", "cid=$CID")
-  }
-  internal val LibHeader by lazy {
-    Headers().add("meta", "cid=$CID", "lib")
-  }
+  private val NatsHeader: ThreadLocal<Headers> = ThreadLocal.withInitial { Headers() }
+  internal val LibHeader by lazy { Headers().add("meta", "lib", "cid=$CID") }
   private val Dispatcher by lazy { NC.createDispatcher { } }
-  private val Endpoint by lazy { ConcurrentHashMap<Long, Subscription>() }
+  private val Endpoint = ConcurrentHashMap<String, Subscription>()
+  private val uniqueAddress = ConcurrentHashMap<String, String>()
 
-  private val CompatAddress by lazy { ConcurrentHashMap<String, String>() }
+  private val CID by lazy { NC.serverInfo.clientId }
 
   fun initNC(address: String) {
-    Address = address
-    NC
-    CID
-    NatsHeader
+    NC = run {
+      Logger.info { "正在尝试连接到NATS服务器: $address" }
+      val nc = runCatching {
+        Nats.connect(address)
+      }.recoverCatching {
+        when (it) {
+          is IOException -> {
+            Logger.info { "连接失败,正在重试..." }
+            Nats.connect(address)
+          }
+          else -> throw it
+        }
+      }.getOrThrow()
+
+      Logger.info { "成功连接到NATS服务器" }
+      nc
+    }
   }
 
   fun uniqueAddress(address: String): String = uniqueAddress.getOrPut(address) {
@@ -112,7 +105,7 @@ object Server : CoroutineScope,Closeable {
                   Logger.trace { "接收到图片URL请求事件" }
                   val url = Res.getPhotoUrl(kind.id) ?: run {
                     Logger.trace { "无法从本地获取该图片URL, 忽略该事件" }
-                    return@sub
+                    return@subscribe
                   }
                   val event = EventType.RespondImage(kind.id, url).toEvent()
                   Logger.trace { "得到图片URL,正在响应..." }
@@ -126,12 +119,12 @@ object Server : CoroutineScope,Closeable {
                     )
                   }
                 }
-                else -> return@sub
+                else -> return@subscribe
               }
             }
-            else -> return@sub
+            else -> return@subscribe
           }
-          return@sub
+          return@subscribe
         }
         Logger.trace { "接收到目标 $target 的消息" }
         handler(msg, target).onFailure { err ->
