@@ -1,29 +1,20 @@
 @file:Suppress("BlockingMethodInNonBlockingContext")
 package org.meowcat.mesagisto.client
 
-import io.ktor.client.* // ktlint-disable no-wildcard-imports
-import io.ktor.client.call.* // ktlint-disable no-wildcard-imports
-import io.ktor.client.engine.cio.* // ktlint-disable no-wildcard-imports
-import io.ktor.client.request.* // ktlint-disable no-wildcard-imports
-import io.ktor.client.statement.* // ktlint-disable no-wildcard-imports
-import io.ktor.util.* // ktlint-disable no-wildcard-imports
-import io.ktor.utils.io.* // ktlint-disable no-wildcard-imports
-import io.ktor.utils.io.core.* // ktlint-disable no-wildcard-imports
-import io.ktor.utils.io.streams.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URI
+import java.net.URL
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.outputStream
 
 object Net {
-  private var HTTP_CLIENT = HttpClient(CIO)
-
+  private var proxy: Proxy? = null
   fun setProxy(proxyUri: String) {
     Logger.info { "设置代理为 $proxyUri" }
-    val proxy = run {
+    proxy = run {
       val uri = URI(proxyUri)
       val type = when (uri.scheme) {
         "http" -> Proxy.Type.HTTP
@@ -32,34 +23,19 @@ object Net {
       }
       Proxy(type, InetSocketAddress(uri.host, uri.port))
     }
-    HTTP_CLIENT = HttpClient(CIO) {
-      engine {
-        this.proxy = proxy
-      }
-    }
   }
 
   suspend fun downloadFile(
     urlStr: String,
     outputFile: Path,
-  ) {
-    HTTP_CLIENT.download(urlStr, outputFile)
-  }
-
-  private suspend fun HttpClient.download(
-    url: String,
-    file: Path
-  ) = withContext(Dispatchers.IO) fn@{
-    val res = this@download.get<HttpStatement>(url).execute {
-      val channel: ByteReadChannel = it.content
-      val output = file.outputStream()
-      while (!channel.isClosedForRead) {
-        val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
-        if (!packet.isEmpty) {
-          output.writePacket(packet)
-        }
+  ): Result<Long> = withContext(Dispatchers.IO) {
+    runCatching {
+      val url = URL(urlStr)
+      if (proxy == null) {
+        url.openStream().use { Files.copy(it, outputFile) }
+      } else {
+        url.openConnection(proxy).getInputStream().use { Files.copy(it, outputFile) }
       }
-      output.close()
     }
   }
 }
