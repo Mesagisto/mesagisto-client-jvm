@@ -7,9 +7,8 @@ plugins {
 java {
   withJavadocJar()
   withSourcesJar()
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(8))
-  }
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
 }
 publishing {
   publications {
@@ -17,7 +16,7 @@ publishing {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.3.3"
+      version = "1.3.4"
     }
   }
 }
@@ -29,6 +28,7 @@ repositories {
 tasks.compileKotlin {
   kotlinOptions {
     jvmTarget = "1.8"
+    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
   }
   sourceCompatibility = "1.8"
 }
@@ -41,6 +41,6 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.2.2")
   implementation("io.nats:jnats:2.14.0")
   implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-  implementation("com.charleskorn.kaml:kaml:0.43.0")
+  implementation("com.charleskorn.kaml:kaml:0.35.0")
   implementation("org.snakeyaml:snakeyaml-engine:2.3")
 }
