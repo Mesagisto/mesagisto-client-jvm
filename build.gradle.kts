@@ -16,7 +16,7 @@ publishing {
       from(components["java"])
       groupId = "org.meowcat"
       artifactId = "mesagisto-client"
-      version = "1.3.4"
+      version = "1.4.0"
     }
   }
 }
@@ -42,5 +42,4 @@ dependencies {
   implementation("io.nats:jnats:2.14.0")
   implementation("org.bouncycastle:bcprov-jdk15on:1.70")
   implementation("com.charleskorn.kaml:kaml:0.35.0")
-  implementation("org.snakeyaml:snakeyaml-engine:2.3")
 }
