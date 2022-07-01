@@ -1,29 +1,24 @@
 plugins {
   id("org.jetbrains.kotlin.jvm") version "1.6.0"
   kotlin("plugin.serialization") version "1.6.0"
-  `java-library`
-  `maven-publish` // Jitpack
+  id("me.him188.maven-central-publish") version "1.0.0-dev-3"
 }
 java {
-  withJavadocJar()
-  withSourcesJar()
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
 }
-publishing {
-  publications {
-    register("maven", MavenPublication::class) {
-      from(components["java"])
-      groupId = "org.meowcat"
-      artifactId = "mesagisto-client"
-      version = "1.4.0"
-    }
-  }
+group = "org.mesagisto"
+version = "0.2.0"
+
+mavenCentralPublish {
+  useCentralS01()
+  githubProject("Mesagisto", "mesagisto-client-jvm")
+  licenseFromGitHubProject("LGPL-2.1", "master")
+  developer("Itsusinn")
 }
 repositories {
   mavenCentral()
   google()
-  maven("https://jitpack.io")
 }
 tasks.compileKotlin {
   kotlinOptions {

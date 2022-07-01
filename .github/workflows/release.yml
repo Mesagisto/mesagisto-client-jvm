@@ -18,11 +18,10 @@ jobs:
           distribution: 'zulu'
           cache: 'gradle'
 
-      - name: Gradle build
-        run: ./gradlew publishToMavenLocal
-
-      - name: Auto release
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
+      - name: Gradle build & release
+        env:
+          PUBLICATION_CREDENTIALS: ${{ secrets.PUBLICATION_CREDENTIALS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew clean checkMavenCentralPublication
+          ./gradlew build publish
