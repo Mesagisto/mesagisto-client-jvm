@@ -5,7 +5,6 @@ sealed class Either<out A, out B> {
   internal abstract val isLeft: Boolean
   fun isLeft(): Boolean = isLeft
   fun isRight(): Boolean = isRight
-
   inline fun tapLeft(f: (A) -> Unit): Either<A, B> =
     when (this) {
       is Left -> {

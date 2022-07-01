@@ -11,6 +11,7 @@ class MesagistoConfig {
   var proxyUri = "http://127.0.0.1:7890"
 
   fun apply() {
+
     if (cipherEnable) {
       Cipher.init(cipherKey, cipherRefusePlain)
     } else {

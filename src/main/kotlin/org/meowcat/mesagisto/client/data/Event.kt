@@ -14,7 +14,6 @@ data class Event(
   @Serializable(with = FixedEventSerializer::class)
   val data: EventType
 )
-
 @Serializable
 sealed class EventType {
   @Serializable
