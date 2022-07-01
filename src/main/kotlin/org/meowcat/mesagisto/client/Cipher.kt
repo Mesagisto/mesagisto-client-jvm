@@ -13,27 +13,20 @@ object Cipher {
   private lateinit var key: KeyParameter
   lateinit var rawKey: String
   private val secureRandom: SecureRandom by lazy { SecureRandom() }
-  var ENABLE by Delegates.notNull<Boolean>()
-    private set
-  var REFUSE_PLAIN by Delegates.notNull<Boolean>()
-    private set
+
   private val inner: ThreadLocal<GCMBlockCipher> = ThreadLocal()
   fun newNonce(): ByteArray {
     val nonce = ByteArray(12)
     secureRandom.nextBytes(nonce)
     return nonce
   }
-  fun init(key: String, refusePlain: Boolean = true) {
-    ENABLE = true
-    REFUSE_PLAIN = refusePlain
+  fun init(key: String) {
     rawKey = key
     val digest = MessageDigest.getInstance("SHA-256")
     val key256 = digest.digest(key.toByteArray())
     this.key = KeyParameter(key256)
   }
-  fun deinit() {
-    ENABLE = false
-  }
+
   fun encrypt(plaintext: ByteArray, nonce: ByteArray): ByteArray {
     val cipher = inner.getOrSet { GCMBlockCipher(AESEngine()) }
     val key = AEADParameters(key, 128, nonce)
@@ -62,10 +55,6 @@ object Cipher {
     return plainBytes
   }
   fun uniqueAddress(address: String): String {
-    return if (ENABLE) {
-      "$address$rawKey"
-    } else {
-      address
-    }
+    return "$address$rawKey"
   }
 }
