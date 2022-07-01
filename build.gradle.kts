@@ -1,6 +1,5 @@
 plugins {
   id("org.jetbrains.kotlin.jvm") version "1.6.0"
-  kotlin("plugin.serialization") version "1.6.0"
   id("me.him188.maven-central-publish") version "1.0.0-dev-3"
 }
 java {
@@ -33,8 +32,8 @@ dependencies {
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3")
+  compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.3")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
   implementation("io.nats:jnats:2.15.3")
   implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-  implementation("com.charleskorn.kaml:kaml:0.45.0")
 }
