@@ -8,16 +8,12 @@ import io.nats.client.impl.Headers
 import io.nats.client.impl.NatsMessage
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.future.await
-import org.meowcat.mesagisto.client.data.Either
-import org.meowcat.mesagisto.client.data.EventType
-import org.meowcat.mesagisto.client.data.Packet
-import org.meowcat.mesagisto.client.data.right
+import org.meowcat.mesagisto.client.data.*
 import java.io.Closeable
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
-
 
 object Server : CoroutineScope, Closeable {
   private lateinit var NC: Connection
@@ -52,11 +48,7 @@ object Server : CoroutineScope, Closeable {
 
   fun uniqueAddress(address: String): String = uniqueAddress.getOrPut(address) {
     val digest = MessageDigest.getInstance("SHA-256")
-    val uniqueAddress = if (Cipher.ENABLE) {
-      "$address${Cipher.rawKey}"
-    } else {
-      address
-    }
+    val uniqueAddress = Cipher.uniqueAddress(address)
     val sha256Address = digest.digest(uniqueAddress.toByteArray())
     Base64.encodeToString(sha256Address)
   }
@@ -101,14 +93,14 @@ object Server : CoroutineScope, Closeable {
           Logger.debug { "正在处理由程序库发送的数据..." }
           when (val packet = Packet.fromCbor(msg.data).getOrThrow()) {
             is Either.Right -> {
-              when (val kind = packet.value.data) {
-                is EventType.RequestImage -> {
+              when (val kind = packet.value) {
+                is Event.RequestImage -> {
                   Logger.trace { "接收到图片URL请求事件" }
                   val url = Res.getPhotoUrl(kind.id) ?: run {
                     Logger.trace { "无法从本地获取该图片URL, 忽略该事件" }
                     return@subscribe
                   }
-                  val event = EventType.RespondImage(kind.id, url).toEvent()
+                  val event = Event.RespondImage(kind.id, url)
                   Logger.trace { "得到图片URL,正在响应..." }
                   val cborBytes = Packet.from(event.right()).toCbor()
                   withContext(Dispatchers.IO) {
@@ -134,6 +126,7 @@ object Server : CoroutineScope, Closeable {
       }
     }
   }
+
   fun unsub(
     target: String,
   ) {

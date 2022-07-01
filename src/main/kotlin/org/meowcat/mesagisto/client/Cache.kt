@@ -42,13 +42,13 @@ object Cache : CoroutineScope {
     }
 
     Logger.trace { "缓存文件不存在,正在请求其URL" }
-    val packet = Event(EventType.RequestImage(id)).toPacket()
+    val packet = Event.RequestImage(id).toPacket()
     val response = Server.request(address, packet, Server.LibHeader).getOrThrow()
 
     return@call when (val rPacket = Packet.fromCbor(response.data).getOrThrow()) {
       is Either.Right -> {
-        val event = rPacket.value.data
-        if (event !is EventType.RespondImage) error("错误的响应")
+        val event = rPacket.value
+        if (event !is Event.RespondImage) error("错误的响应")
         fileByUrl(event.id, event.url).getOrThrow()
       }
       is Either.Left -> {

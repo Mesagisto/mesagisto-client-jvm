@@ -4,6 +4,7 @@ import io.nats.client.Dispatcher
 import io.nats.client.Message
 import io.nats.client.Subscription
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
+import org.jetbrains.annotations.TestOnly
 import java.nio.ByteBuffer
 
 inline fun Dispatcher.asyncSubscribe(
@@ -40,3 +41,5 @@ fun ByteArray.toI32(): Int? =
       .getInt(0)
   }.getOrNull()
 
+@TestOnly
+fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }

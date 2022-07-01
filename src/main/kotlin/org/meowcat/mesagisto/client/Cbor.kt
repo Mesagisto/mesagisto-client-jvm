@@ -1,21 +1,15 @@
 package org.meowcat.mesagisto.client
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.encodeToByteArray
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
-@OptIn(ExperimentalSerializationApi::class)
 object Cbor {
-
-  val inner = Cbor {
-    encodeDefaults = true
-    ignoreUnknownKeys = true
-  }
+  var mapper: ObjectMapper = CBORMapper().registerKotlinModule()
 
   inline fun <reified T> encodeToByteArray(value: T): ByteArray =
-    inner.encodeToByteArray(value)
+    mapper.writeValueAsBytes(value)
 
   inline fun <reified T> decodeFromByteArray(bytes: ByteArray): T =
-    inner.decodeFromByteArray(bytes)
+    mapper.readValue(bytes, T::class.java)
 }
