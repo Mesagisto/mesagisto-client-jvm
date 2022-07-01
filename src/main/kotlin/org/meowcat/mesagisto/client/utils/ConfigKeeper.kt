@@ -8,6 +8,7 @@ import java.nio.file.Path
 import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
 val YAML = ObjectMapper(YAMLFactory()).apply {
+  configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
 class ConfigKeeper<C> (
