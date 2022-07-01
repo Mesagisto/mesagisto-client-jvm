@@ -8,7 +8,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 group = "org.mesagisto"
-version = "0.2.0"
+version = "1.4.1"
 
 mavenCentralPublish {
   useCentralS01()
