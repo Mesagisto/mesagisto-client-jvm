@@ -36,17 +36,3 @@ sealed class MessageType {
     val url: String? = null,
   ) : MessageType()
 }
-
-@TestOnly
-fun main() {
-  val _msg_1 = MessageType.Text("dd")
-  val msg = Message(
-    profile = Profile("dd".toByteArray()),
-    id = "id".toByteArray(),
-    chain = listOf(_msg_1)
-  )
-
-  val bytes = Cbor.encodeToByteArray(msg)
-  println(bytes.toHex())
-  val _msgDe: Message = Cbor.decodeFromByteArray(bytes)
-}

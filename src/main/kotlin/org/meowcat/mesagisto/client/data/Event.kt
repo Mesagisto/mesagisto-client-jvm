@@ -21,13 +21,3 @@ sealed class Event {
     val url: String
   ) : Event()
 }
-
-
-
-@TestOnly
-fun main() {
-  val event = Event.RequestImage("ww".toByteArray())
-  val bytes = Cbor.encodeToByteArray(event)
-  println(bytes.toHex())
-  val eventDe: Event = Cbor.decodeFromByteArray(bytes)
-}
