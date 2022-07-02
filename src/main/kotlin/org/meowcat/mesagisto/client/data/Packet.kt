@@ -10,9 +10,7 @@ data class Packet(
   val encrypt: ByteArray,
   val version: String
 ) {
-  fun toCbor(): ByteArray {
-    return Cbor.encodeToByteArray(this)
-  }
+  fun toCbor(): ByteArray = Cbor.encodeToByteArray(this)
 
   companion object {
     fun from(data: Either<Message, Event>): Packet {

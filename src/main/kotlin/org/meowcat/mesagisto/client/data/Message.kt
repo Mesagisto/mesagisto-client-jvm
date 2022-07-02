@@ -3,9 +3,6 @@ package org.meowcat.mesagisto.client.data
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
-import org.jetbrains.annotations.TestOnly
-import org.meowcat.mesagisto.client.Cbor
-import org.meowcat.mesagisto.client.toHex
 
 fun Message.toPacket(): Packet = Packet.from(this.left())
 
