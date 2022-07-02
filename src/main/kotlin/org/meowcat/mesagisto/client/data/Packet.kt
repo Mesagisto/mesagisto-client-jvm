@@ -5,10 +5,10 @@ import org.meowcat.mesagisto.client.Cbor
 import org.meowcat.mesagisto.client.Cipher
 
 data class Packet(
-  val type: String,
-  val content: ByteArray,
-  val encrypt: ByteArray,
-  val version: String
+  val type: String = "",
+  val content: ByteArray = ByteArray(0),
+  val encrypt: ByteArray = ByteArray(0),
+  val version: String = "v1"
 ) {
   fun toCbor(): ByteArray = Cbor.encodeToByteArray(this)
 

@@ -1,21 +1,24 @@
 @file:Suppress("ArrayInDataClass", "unused")
 package org.meowcat.mesagisto.client.data
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 fun Event.toPacket(): Packet = Packet.from(this.right())
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes(
+  Type(Event.RequestImage::class, name = "request_image"),
+  Type(Event.RespondImage::class, name = "respond_image")
+)
 sealed class Event {
-  @JsonTypeName("request_image")
-  data class RequestImage(
-    val id: ByteArray,
+  data class RequestImage constructor(
+    val id: ByteArray = ByteArray(0),
   ) : Event()
 
-  @JsonTypeName("respond_image")
-  data class RespondImage(
-    val id: ByteArray,
-    val url: String
+  data class RespondImage constructor(
+    val id: ByteArray = ByteArray(0),
+    val url: String = ""
   ) : Event()
 }

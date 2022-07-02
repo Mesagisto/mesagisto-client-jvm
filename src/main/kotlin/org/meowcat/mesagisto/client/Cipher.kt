@@ -7,7 +7,6 @@ import org.bouncycastle.crypto.params.KeyParameter
 import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.concurrent.getOrSet
-import kotlin.properties.Delegates
 
 object Cipher {
   private lateinit var key: KeyParameter
