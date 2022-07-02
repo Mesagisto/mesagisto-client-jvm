@@ -4,7 +4,6 @@ package org.meowcat.mesagisto.client.data
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 fun Message.toPacket(): Packet = Packet.from(this.left())
 
@@ -20,17 +19,18 @@ data class Profile(
   val username: String? = null,
   val nick: String? = null,
 )
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes(
   Type(MessageType.Text::class, name = "text"),
   Type(MessageType.Image::class, name = "image")
 )
 sealed class MessageType {
-  @JsonTypeName("text")
+
   data class Text(
     val content: String = ""
   ) : MessageType()
-  @JsonTypeName("image")
+
   data class Image(
     // unique id supplied by platform
     val id: ByteArray = ByteArray(0),
