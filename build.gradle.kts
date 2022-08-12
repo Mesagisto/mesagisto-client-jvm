@@ -32,7 +32,9 @@ tasks.compileKotlin {
   }
   sourceCompatibility = "1.8"
 }
-
+tasks.test {
+  useJUnitPlatform()
+}
 dependencies {
   implementation("org.fusesource.leveldbjni:leveldbjni-all:1.8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
@@ -43,4 +45,5 @@ dependencies {
 
   implementation("io.nats:jnats:2.15.3")
   implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+  testImplementation(kotlin("test"))
 }
