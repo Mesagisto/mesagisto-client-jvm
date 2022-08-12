@@ -8,7 +8,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 group = "org.mesagisto"
-version = "1.5.2"
+version = "1.6.0-build27"
 
 mavenCentralPublish {
   nexusStaging {
@@ -37,8 +37,8 @@ tasks.test {
 }
 dependencies {
   implementation("org.fusesource.leveldbjni:leveldbjni-all:1.8")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
 
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3")
