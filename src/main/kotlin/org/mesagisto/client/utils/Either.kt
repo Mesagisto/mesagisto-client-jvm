@@ -1,10 +1,11 @@
-package org.meowcat.mesagisto.client.data
+package org.mesagisto.client.utils
 
 sealed class Either<out A, out B> {
   internal abstract val isRight: Boolean
   internal abstract val isLeft: Boolean
   fun isLeft(): Boolean = isLeft
   fun isRight(): Boolean = isRight
+
   inline fun tapLeft(f: (A) -> Unit): Either<A, B> =
     when (this) {
       is Left -> {
@@ -30,6 +31,7 @@ sealed class Either<out A, out B> {
 
   data class Left<out A> constructor(val value: A) : Either<A, Nothing>() {
     override val isLeft = true
+
     override val isRight = false
     override fun toString(): String = "Either.Left($value)"
 
