@@ -43,7 +43,11 @@ dependencies {
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3")
 
-  implementation("io.nats:jnats:2.15.3")
+  implementation("com.fasterxml.uuid:java-uuid-generator:4.0.1")
+
+  implementation("org.java-websocket:Java-WebSocket:1.5.3")
+
   implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
   testImplementation(kotlin("test"))
 }
