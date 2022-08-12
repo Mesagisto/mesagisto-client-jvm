@@ -1,9 +1,9 @@
-package org.meowcat.mesagisto.client.utils
+package org.mesagisto.client.utils
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import org.meowcat.mesagisto.client.Logger
+import org.mesagisto.client.Logger
 import java.nio.file.Path
 import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
@@ -11,7 +11,7 @@ val YAML = ObjectMapper(YAMLFactory()).apply {
   configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-class ConfigKeeper<C> (
+data class ConfigKeeper<C> (
   val value: C,
   private val path: Path
 ) {

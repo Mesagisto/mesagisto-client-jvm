@@ -1,4 +1,6 @@
-package org.meowcat.mesagisto.client
+@file:Suppress("NOTHING_TO_INLINE", "unused")
+
+package org.mesagisto.client
 enum class LogLevel {
   TRACE, DEBUG, INFO, WARN, ERROR
 }
@@ -6,7 +8,6 @@ interface ILogger {
   fun log(level: LogLevel, msg: String)
 }
 
-@Suppress("NOTHING_TO_INLINE", "unused")
 object Logger {
   var level: LogLevel = LogLevel.TRACE
   var provider: ILogger? = null

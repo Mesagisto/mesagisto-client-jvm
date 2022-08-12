@@ -1,4 +1,4 @@
-package org.meowcat.mesagisto.client
+package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import java.nio.file.FileSystems

@@ -1,4 +1,4 @@
-package org.meowcat.mesagisto.client
+package org.mesagisto.client
 
 import org.bouncycastle.crypto.engines.AESEngine
 import org.bouncycastle.crypto.modes.GCMBlockCipher
@@ -23,7 +23,7 @@ object Cipher {
     rawKey = key
     val digest = MessageDigest.getInstance("SHA-256")
     val key256 = digest.digest(key.toByteArray())
-    this.key = KeyParameter(key256)
+    Cipher.key = KeyParameter(key256)
   }
 
   fun encrypt(plaintext: ByteArray, nonce: ByteArray): ByteArray {

@@ -1,25 +1,23 @@
-package org.meowcat.mesagisto.client
+package org.mesagisto.client
 
-import io.nats.client.Dispatcher
-import io.nats.client.Message
-import io.nats.client.Subscription
-import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.TestOnly
 import java.nio.ByteBuffer
+import kotlin.coroutines.CoroutineContext
 
-inline fun Dispatcher.asyncSubscribe(
-  subject: String,
-  crossinline handler: suspend (Message) -> Unit
-): Subscription = subscribe(subject) {
-  runBlocking {
-    launch(Dispatchers.Default) {
-      try {
-        handler.invoke(it)
-      } catch (e: Throwable) {
-        Logger.error(e)
-      }
-    }
+suspend inline fun <R> withCatch(
+  context: CoroutineContext,
+  crossinline block: suspend CoroutineScope.() -> R
+): Result<R> = withContext(context) fn@{
+  return@fn try {
+    Result.success(block())
+  } catch (e: Throwable) {
+    Result.failure(e)
   }
+//  catch (cancel: CancellationException) {
+//    throw cancel
+//  }
 }
 
 fun Int.toByteArray(): ByteArray =

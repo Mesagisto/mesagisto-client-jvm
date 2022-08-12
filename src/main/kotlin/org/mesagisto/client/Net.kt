@@ -1,12 +1,10 @@
 @file:Suppress("BlockingMethodInNonBlockingContext")
-package org.meowcat.mesagisto.client
+
+package org.mesagisto.client
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.URI
-import java.net.URL
+import java.net.* // ktlint-disable no-wildcard-imports
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -27,7 +25,7 @@ object Net {
 
   suspend fun downloadFile(
     urlStr: String,
-    outputFile: Path,
+    outputFile: Path
   ): Result<Long> = withContext(Dispatchers.IO) {
     runCatching {
       val url = URL(urlStr)
