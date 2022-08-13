@@ -50,7 +50,7 @@ sealed class Ctl {
 )
 sealed class Inbox {
   data class Request(val id: UUID = UUID.randomUUID()) : Inbox()
-  data class Respond(val id: UUID) : Inbox()
+  data class Respond(val id: UUID = UUID.randomUUID()) : Inbox()
 }
 
 data class Packet constructor(
