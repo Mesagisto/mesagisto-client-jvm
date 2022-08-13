@@ -11,7 +11,7 @@ import java.net.URI
 import java.nio.ByteBuffer
 
 class WebSocketSession(
-  val server: String,
+  val serverName: String,
   val serverURI: URI,
   var fut: CompletableDeferred<WebSocketSession>?
 ) : WebSocketClient(serverURI), CoroutineScope by CoroutineScope(Job()) {
@@ -36,7 +36,10 @@ class WebSocketSession(
   }
 
   override fun onClose(code: Int, reason: String, remote: Boolean) {
-    cancel()
+    if (code == 2000) return
+    launch {
+      Server.handleEndpointClose(serverName, serverURI)
+    }
     println("closed with exit code $code additional info: $reason")
   }
 

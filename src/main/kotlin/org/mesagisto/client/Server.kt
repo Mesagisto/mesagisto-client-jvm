@@ -51,6 +51,13 @@ object Server : Closeable {
       else -> {}
     }
   }
+
+  suspend fun handleEndpointClose(name: String, uri: URI) = withContext(Dispatchers.Default) {
+    val formerEndpoint = remoteEndpoints.remove(name)
+    val latter = WebSocketSession.asyncConnect(name, uri).await()
+    val conflict = remoteEndpoints.put(name, latter) ?: return@withContext
+    conflict.close(2000)
+  }
   fun roomId(roomAddress: String): UUID = roomMap.getOrPut(roomAddress) {
     val uniqueAddress = Cipher.uniqueAddress(roomAddress)
     UUIDv5.fromString(uniqueAddress)
