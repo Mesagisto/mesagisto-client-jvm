@@ -23,15 +23,20 @@ object Server : Closeable {
     val endpoints = remotes.map {
       val serverName = it.key
       val serverAddress = it.value
-      runCatching {
-        Logger.info { "connecting" }
-        serverName to WebSocketSession(serverName, URI(serverAddress))
-      }.onFailure { e ->
-        Logger.error(e)
-      }.onSuccess {
-        Logger.info { "Successfully connected to $serverName $serverAddress" }
-      }.getOrNull()
-    }.filterNotNull()
+      async {
+        runCatching {
+          Logger.info { "connecting" }
+          val ws = withTimeout(7000) {
+            WebSocketSession.asyncConnect(serverName, URI(serverAddress)).await()
+          }
+          serverName to ws
+        }.onFailure { e ->
+          Logger.error(e)
+        }.onSuccess {
+          Logger.info { "Successfully connected to $serverName $serverAddress" }
+        }.getOrNull()
+      }
+    }.awaitAll().filterNotNull()
     remoteEndpoints.putAll(endpoints)
   }
 

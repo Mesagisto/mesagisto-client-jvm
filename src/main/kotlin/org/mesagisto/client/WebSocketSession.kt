@@ -12,13 +12,28 @@ import java.nio.ByteBuffer
 
 class WebSocketSession(
   val server: String,
-  val serverURI: URI
+  val serverURI: URI,
+  var fut: CompletableDeferred<WebSocketSession>?
 ) : WebSocketClient(serverURI), CoroutineScope by CoroutineScope(Job()) {
-  init {
-    connect()
+
+  companion object {
+    fun asyncConnect(
+      server: String,
+      serverURI: URI
+    ): CompletableDeferred<WebSocketSession> {
+      val fut = CompletableDeferred<WebSocketSession>()
+      val ws = WebSocketSession(server, serverURI, fut)
+      ws.connect()
+      return fut
+    }
   }
 
   override fun onOpen(handshakedata: ServerHandshake) {
+    val fut = this.fut
+    if (fut != null) {
+      fut.complete(this)
+      this.fut = null
+    }
     println("new connection opened")
   }
 

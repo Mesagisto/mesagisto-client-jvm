@@ -40,7 +40,7 @@ suspend fun main() {
     cipherKey = "test"
     proxyEnable = false
     remotes = HashMap<String, String>().apply {
-      put("mesagisto", "ws://127.0.0.1:6996")
+      put("mesagisto", "ws://center.itsusinn.site:6996")
     }
     packetHandler = {
       println("${it.decrypt()}")
