@@ -9,7 +9,6 @@ import org.mesagisto.client.utils.ControlFlow
 class MesagistoConfig {
   var name: String = "default"
   var cipherKey: String = ""
-  var resolvePhotoUrl: (suspend (ByteArray, ByteArray) -> Result<String>)? = null
   var remotes: HashMap<String, String> = HashMap()
   var packetHandler: PackHandler? = null
   var proxyEnable = false
@@ -18,14 +17,6 @@ class MesagistoConfig {
   suspend fun apply() {
     Cipher.init(cipherKey)
     Db.init(name)
-
-    if (resolvePhotoUrl == null) {
-      Res.resolvePhotoUrl { _, _ ->
-        Result.failure(IllegalStateException("Unreachable"))
-      }
-    } else {
-      Res.resolvePhotoUrl(resolvePhotoUrl!!)
-    }
     if (proxyEnable) {
       Net.setProxy(proxyUri)
     }
