@@ -27,14 +27,12 @@ class WebSocketSession(
       return fut
     }
   }
-
   override fun onOpen(handshakedata: ServerHandshake) {
     val fut = this.fut
     if (fut != null) {
       fut.complete(this)
       this.fut = null
     }
-    println("new connection opened")
   }
 
   override fun onClose(code: Int, reason: String, remote: Boolean) {
@@ -43,13 +41,17 @@ class WebSocketSession(
   }
 
   override fun onMessage(message: String) {
-    println("received message: $message")
+    Logger.warn { "received text message: $message" }
   }
 
   override fun onMessage(bin: ByteBuffer) = launch fn@{
     runCatching {
-      val packet = Packet.fromCbor(bin.array()).onFailure { Logger.warn { "packet de exception" } }.getOrNull() ?: return@fn
-      val res = Server.packetHandler.invoke(packet).onFailure { Logger.error(it) }.getOrNull() ?: return@fn
+      val packet = Packet.fromCbor(bin.array())
+        .onFailure { Logger.warn { "packet de exception ${it.message}" } }
+        .getOrNull() ?: return@fn
+      val res = Server.packetHandler.invoke(packet)
+        .onFailure { Logger.error(it) }
+        .getOrNull() ?: return@fn
       when (res) {
         is ControlFlow.Break -> {
           Server.handleRestPkt(res.value)
@@ -62,6 +64,6 @@ class WebSocketSession(
   }.let { }
 
   override fun onError(ex: Exception) {
-    System.err.println("an error occurred:$ex")
+    Logger.error { "an error occurred:$ex" }
   }
 }
