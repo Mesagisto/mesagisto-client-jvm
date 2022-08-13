@@ -1,7 +1,6 @@
 package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
-import kotlinx.coroutines.future.await
 import org.mesagisto.client.data.Inbox
 import org.mesagisto.client.data.Packet
 import org.mesagisto.client.utils.ControlFlow
@@ -9,7 +8,6 @@ import org.mesagisto.client.utils.UUIDv5
 import java.io.Closeable
 import java.net.URI
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 
 typealias PackHandler = suspend (Packet) -> Result<ControlFlow<Packet, Unit>>
@@ -17,7 +15,7 @@ typealias PackHandler = suspend (Packet) -> Result<ControlFlow<Packet, Unit>>
 object Server : Closeable {
   private val remoteEndpoints = ConcurrentHashMap<String, WebSocketSession>()
   lateinit var packetHandler: PackHandler
-  private val inbox = ConcurrentHashMap<UUID, CompletableFuture<Packet>>()
+  private val inbox = ConcurrentHashMap<UUID, CompletableDeferred<Packet>>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   suspend fun init(remotes: Map<String, String>) = withCatch(Dispatchers.Default) {
     val endpoints = remotes.map {
@@ -100,9 +98,9 @@ object Server : Closeable {
       if (inbox == null) {
         pkt.inbox = Inbox.Request()
       }
-      val fut = CompletableFuture<Packet>()
+      val fut = CompletableDeferred<Packet>()
+      this@Server.inbox[(pkt.inbox as Inbox.Request).id] = fut
       launch { send(pkt, serverName) }
-      // TODO withTimeout()
       fut.await()
     }
   }
