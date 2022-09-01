@@ -37,10 +37,10 @@ class WebSocketSession(
 
   override fun onClose(code: Int, reason: String, remote: Boolean) {
     if (code == 2000) return
-    launch {
-      Server.handleEndpointClose(serverName, serverURI)
-    }
     println("closed with exit code $code additional info: $reason")
+    runBlocking {
+      Server.reconnect(serverName, serverURI)
+    }
   }
 
   override fun onMessage(message: String) {

@@ -9,8 +9,12 @@ import java.io.Closeable
 import java.net.URI
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
 typealias PackHandler = suspend (Packet) -> Result<ControlFlow<Packet, Unit>>
+typealias ServerName = String
 
 object Server : Closeable {
   private val remoteEndpoints = ConcurrentHashMap<String, WebSocketSession>()
@@ -52,11 +56,26 @@ object Server : Closeable {
     }
   }
 
-  suspend fun handleEndpointClose(name: String, uri: URI) = withContext(Dispatchers.Default) {
-    val formerEndpoint = remoteEndpoints.remove(name)
+  private val reconnectPoison = ConcurrentHashMap<ServerName, Lock>()
+  suspend fun reconnect(name: ServerName, uri: URI) = withContext(Dispatchers.Default) {
+    Logger.info { "Reconnecting to $name $uri" }
+    val lock = reconnectPoison.getOrPut(name) { ReentrantLock() }
+    if (!lock.tryLock()) return@withContext
+
+    remoteEndpoints.remove(name)
     val latter = WebSocketSession.asyncConnect(name, uri).await()
     val conflict = remoteEndpoints.put(name, latter) ?: return@withContext
+    Logger.info { "Reconnect successfully" }
     conflict.close(2000)
+
+    lock.unlock()
+    subs.forEach { sub ->
+      sub.value.forEach {
+        val pkt = Packet.newSub(it)
+        send(pkt, sub.key)
+      }
+    }
+    reconnectPoison.remove(name)
   }
   fun roomId(roomAddress: String): UUID = roomMap.getOrPut(roomAddress) {
     val uniqueAddress = Cipher.uniqueAddress(roomAddress)
@@ -81,18 +100,25 @@ object Server : Closeable {
     }
   }
 
-  suspend fun unsub(
-    room: UUID,
-    serverName: String
-  ) {
-    val pkt = Packet.newUnsub(room)
-    send(pkt, serverName)
-  }
+  private val subs = ConcurrentHashMap<ServerName, CopyOnWriteArraySet<UUID>>()
+
   suspend fun sub(
     room: UUID,
     serverName: String
   ) {
+    val entry = subs.getOrPut(serverName) { CopyOnWriteArraySet() }
+    entry.add(room)
     val pkt = Packet.newSub(room)
+    send(pkt, serverName)
+  }
+
+  suspend fun unsub(
+    room: UUID,
+    serverName: String
+  ) {
+    val entry = subs.getOrPut(serverName) { CopyOnWriteArraySet() }
+    entry.remove(room)
+    val pkt = Packet.newUnsub(room)
     send(pkt, serverName)
   }
 
