@@ -19,24 +19,24 @@ typealias ServerName = String
 object Server : Closeable {
   private val remoteEndpoints = ConcurrentHashMap<String, WebSocketSession>()
   lateinit var packetHandler: PackHandler
+  lateinit var remotes: Map<String, String>
   private val inbox = ConcurrentHashMap<UUID, CompletableDeferred<Packet>>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   suspend fun init(remotes: Map<String, String>) = withCatch(Dispatchers.Default) {
+    this@Server.remotes = remotes
     val endpoints = remotes.map {
       val serverName = it.key
       val serverAddress = it.value
       async {
-        runCatching {
-          Logger.info { "connecting" }
-          val ws = withTimeout(7000) {
-            WebSocketSession.asyncConnect(serverName, URI(serverAddress)).await()
-          }
-          serverName to ws
-        }.onFailure { e ->
-          Logger.error(e)
-        }.onSuccess {
-          Logger.info { "Successfully connected to $serverName $serverAddress" }
-        }.getOrNull()
+        Logger.info { "Connecting to websocket" }
+        val conn = WebSocketSession.asyncConnect(
+          serverName,
+          URI(serverAddress),
+          7000
+        ).onFailure { e -> Logger.error(e) }
+          .onSuccess { Logger.info { "Successfully connected to $serverName $serverAddress" } }
+          .getOrNull() ?: return@async null
+        serverName to conn
       }
     }.awaitAll().filterNotNull()
     remoteEndpoints.putAll(endpoints)
@@ -63,19 +63,25 @@ object Server : Closeable {
     if (!lock.tryLock()) return@withContext
 
     remoteEndpoints.remove(name)
-    val latter = WebSocketSession.asyncConnect(name, uri).await()
-    val conflict = remoteEndpoints.put(name, latter) ?: return@withContext
-    Logger.info { "Reconnect successfully" }
-    conflict.close(2000)
-
-    lock.unlock()
-    subs.forEach { sub ->
-      sub.value.forEach {
-        val pkt = Packet.newSub(it)
-        send(pkt, sub.key)
+    WebSocketSession.asyncConnect(name, uri, 7000)
+      .onSuccess {
+        val conflict = remoteEndpoints.put(name, it) ?: return@withContext
+        Logger.info { "Reconnect successfully" }
+        conflict.close(2000)
+        lock.unlock()
+        subs.forEach { sub ->
+          sub.value.forEach { uuid ->
+            Logger.debug { "ReSub on ${sub.key} $uuid" }
+            val pkt = Packet.newSub(uuid)
+            send(pkt, sub.key)
+          }
+        }
+        reconnectPoison.remove(name)
+      }.onFailure {
+        Logger.warn { "Reconnect to $name failed" }
+        lock.unlock()
+        Logger.error(it)
       }
-    }
-    reconnectPoison.remove(name)
   }
   fun roomId(roomAddress: String): UUID = roomMap.getOrPut(roomAddress) {
     val uniqueAddress = Cipher.uniqueAddress(roomAddress)
@@ -92,7 +98,8 @@ object Server : Closeable {
   ) {
     val bytes = content.toCbor()
     val remote = remoteEndpoints[serverName] ?: run {
-      Logger.error { "wtf" }
+      val uri = this.remotes[serverName] ?: return
+      reconnect(serverName, URI(uri))
       return
     }
     withContext(Dispatchers.IO) {
@@ -106,6 +113,7 @@ object Server : Closeable {
     room: UUID,
     serverName: String
   ) {
+    Logger.debug { "Sub on $serverName $room" }
     val entry = subs.getOrPut(serverName) { CopyOnWriteArraySet() }
     entry.add(room)
     val pkt = Packet.newSub(room)

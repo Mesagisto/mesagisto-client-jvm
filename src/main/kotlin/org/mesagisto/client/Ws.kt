@@ -10,21 +10,28 @@ import org.mesagisto.client.utils.ControlFlow
 import java.net.URI
 import java.nio.ByteBuffer
 
+private val WsScope = CoroutineScope(Dispatchers.Default)
+
 class WebSocketSession(
   val serverName: String,
   val serverURI: URI,
   var fut: CompletableDeferred<WebSocketSession>?
-) : WebSocketClient(serverURI), CoroutineScope by CoroutineScope(Job()) {
+) : WebSocketClient(serverURI) {
 
   companion object {
-    fun asyncConnect(
+    suspend fun asyncConnect(
       server: String,
-      serverURI: URI
-    ): CompletableDeferred<WebSocketSession> {
+      serverURI: URI,
+      timeout: Long
+    ): Result<WebSocketSession> {
       val fut = CompletableDeferred<WebSocketSession>()
       val ws = WebSocketSession(server, serverURI, fut)
       ws.connect()
-      return fut
+      return runCatching {
+        withTimeout(timeout) {
+          fut.await()
+        }
+      }
     }
   }
   override fun onOpen(handshakedata: ServerHandshake) {
@@ -39,6 +46,10 @@ class WebSocketSession(
     if (code == 2000) return
     println("closed with exit code $code additional info: $reason")
     runBlocking {
+      if (code == -1) {
+        fut?.completeExceptionally(IllegalStateException(reason))
+        delay(2000)
+      }
       Server.reconnect(serverName, serverURI)
     }
   }
@@ -47,7 +58,7 @@ class WebSocketSession(
     Logger.warn { "received text message: $message" }
   }
 
-  override fun onMessage(bin: ByteBuffer) = launch fn@{
+  override fun onMessage(bin: ByteBuffer) = WsScope.launch fn@{
     runCatching {
       val packet = Packet.fromCbor(bin.array())
         .onFailure { Logger.warn { "packet de exception ${it.message}" } }

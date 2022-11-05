@@ -8,7 +8,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 group = "org.mesagisto"
-version = "1.6.0-dev3"
+version = "1.6.0-dev12"
 
 mavenCentralPublish {
   nexusStaging {
@@ -30,7 +30,6 @@ tasks.compileKotlin {
     jvmTarget = "1.8"
     freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
   }
-  sourceCompatibility = "1.8"
 }
 tasks.test {
   useJUnitPlatform()

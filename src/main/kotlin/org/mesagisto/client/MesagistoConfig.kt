@@ -9,7 +9,7 @@ import org.mesagisto.client.utils.ControlFlow
 class MesagistoConfig {
   var name: String = "default"
   var cipherKey: String = ""
-  var remotes: HashMap<String, String> = HashMap()
+  var remotes: Map<String, String> = HashMap()
   var packetHandler: PackHandler? = null
   var proxyEnable = false
   var proxyUri = "http://127.0.0.1:7890"
