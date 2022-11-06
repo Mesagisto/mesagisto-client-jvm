@@ -64,10 +64,9 @@ object Server : Closeable {
     remoteEndpoints.remove(name)
     WebSocketSession.asyncConnect(name, uri, 7000)
       .onSuccess {
-        val conflict = remoteEndpoints.put(name, it) ?: return@withContext
-        Logger.info { "Reconnect successfully" }
-        conflict.close(2000)
+        remoteEndpoints.put(name, it)?.close(2000)
         lock.unlock()
+        Logger.info { "Reconnect successfully" }
         subs.forEach { sub ->
           sub.value.forEach { uuid ->
             Logger.debug { "ReSub on ${sub.key} $uuid" }
