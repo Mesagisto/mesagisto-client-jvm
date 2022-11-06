@@ -1,6 +1,7 @@
 package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
+import kotlinx.coroutines.sync.Mutex
 import org.mesagisto.client.data.Inbox
 import org.mesagisto.client.data.Packet
 import org.mesagisto.client.utils.ControlFlow
@@ -10,8 +11,6 @@ import java.net.URI
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
 
 typealias PackHandler = suspend (Packet) -> Result<ControlFlow<Packet, Unit>>
 typealias ServerName = String
@@ -21,6 +20,7 @@ object Server : Closeable {
   lateinit var packetHandler: PackHandler
   lateinit var remotes: Map<String, String>
   private val inbox = ConcurrentHashMap<UUID, CompletableDeferred<Packet>>()
+  private val reconnectPoison = ConcurrentHashMap<ServerName, Mutex>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   suspend fun init(remotes: Map<String, String>) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
@@ -56,10 +56,9 @@ object Server : Closeable {
     }
   }
 
-  private val reconnectPoison = ConcurrentHashMap<ServerName, Lock>()
   suspend fun reconnect(name: ServerName, uri: URI) = withContext(Dispatchers.Default) {
     Logger.info { "Reconnecting to $name $uri" }
-    val lock = reconnectPoison.getOrPut(name) { ReentrantLock() }
+    val lock = reconnectPoison.getOrPut(name) { Mutex() }
     if (!lock.tryLock()) return@withContext
 
     remoteEndpoints.remove(name)
