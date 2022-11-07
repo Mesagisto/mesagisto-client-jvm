@@ -15,22 +15,27 @@ private val WsScope = CoroutineScope(Dispatchers.Default)
 class WebSocketSession(
   val serverName: String,
   val serverURI: URI,
-  var fut: CompletableDeferred<WebSocketSession>?
+  var fut: CompletableDeferred<WebSocketSession>?,
+  var reconnect: Boolean = false
 ) : WebSocketClient(serverURI) {
 
   companion object {
     suspend fun asyncConnect(
       server: String,
       serverURI: URI,
-      timeout: Long
+      timeout: Long,
+      reconnect: Boolean = false
     ): Result<WebSocketSession> {
       val fut = CompletableDeferred<WebSocketSession>()
-      val ws = WebSocketSession(server, serverURI, fut)
+      val ws = WebSocketSession(server, serverURI, fut, reconnect)
       ws.connect()
+      ws.connectionLostTimeout = 30
       return runCatching {
         withTimeout(timeout) {
           fut.await()
         }
+      }.onFailure {
+        ws.close()
       }
     }
   }
@@ -42,17 +47,19 @@ class WebSocketSession(
     }
   }
 
-  override fun onClose(code: Int, reason: String, remote: Boolean) {
-    if (code == 2000) return
-    println("closed with exit code $code additional info: $reason")
-    runBlocking {
-      if (code == -1) {
-        fut?.completeExceptionally(IllegalStateException(reason))
-        delay(2000)
-      }
-      Server.reconnect(serverName, serverURI)
+  override fun onClose(code: Int, reason: String, remote: Boolean) = WsScope.launch fn@{
+    Logger.info { "Websocket closed with code $code additional info: $reason" }
+    fut?.completeExceptionally(IllegalStateException(reason))
+    if (code == 2000 || reconnect) return@fn
+    var retryTimes = 1
+    while (true) {
+      Logger.info { "Trying to connect WS server $serverName, retry times $retryTimes" }
+      if (Server.reconnect(serverName, serverURI).isSuccess) break
+      retryTimes += 1
+      delay(2_000)
+      continue
     }
-  }
+  }.let { }
 
   override fun onMessage(message: String) {
     Logger.warn { "received text message: $message" }
@@ -78,6 +85,6 @@ class WebSocketSession(
   }.let { }
 
   override fun onError(ex: Exception) {
-    Logger.error { "an error occurred:$ex" }
+    Logger.error { "An error occurred in websocket:$ex" }
   }
 }
