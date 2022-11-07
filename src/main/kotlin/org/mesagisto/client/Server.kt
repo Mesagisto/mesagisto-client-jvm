@@ -1,3 +1,4 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
 package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
@@ -22,19 +23,21 @@ object Server : Closeable {
   private val inbox = ConcurrentHashMap<UUID, CompletableDeferred<Packet>>()
   private val reconnectPoison = ConcurrentHashMap<ServerName, Mutex>()
   val roomMap = ConcurrentHashMap<String, UUID>()
-  suspend fun init(remotes: Map<String, String>) = withCatch(Dispatchers.Default) {
+  var sameSideDeliver = true
+  suspend fun init(remotes: Map<String, String>,sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
+    this@Server.sameSideDeliver = sameSideDeliver
     val endpoints = remotes.map {
       val serverName = it.key
       val serverAddress = it.value
       async {
-        Logger.info { "Connecting to websocket" }
+        Logger.info { "Connecting to websocket $serverName $serverAddress" }
         val conn = WebSocketSession.asyncConnect(
           serverName,
           URI(serverAddress),
-          7000
+          15_000
         ).onFailure { e -> Logger.error(e) }
-          .onSuccess { Logger.info { "Successfully connected to $serverName $serverAddress" } }
+          .onSuccess { Logger.info { "Successfully connected to $serverName" } }
           .getOrNull() ?: return@async null
         serverName to conn
       }
@@ -56,16 +59,17 @@ object Server : Closeable {
     }
   }
 
-  suspend fun reconnect(name: ServerName, uri: URI) = withContext(Dispatchers.Default) {
+  suspend fun reconnect(name: ServerName, uri: URI): Result<WebSocketSession> {
     Logger.info { "Reconnecting to $name $uri" }
     val lock = reconnectPoison.getOrPut(name) { Mutex() }
-    if (!lock.tryLock()) return@withContext
+    if (!lock.tryLock()) return Result.failure(IllegalStateException())
 
     remoteEndpoints.remove(name)
-    WebSocketSession.asyncConnect(name, uri, 7000)
+    return WebSocketSession.asyncConnect(name, uri, 15_000, true)
       .onSuccess {
         remoteEndpoints.put(name, it)?.close(2000)
         lock.unlock()
+        it.reconnect = false
         Logger.info { "Reconnect successfully" }
         subs.forEach { sub ->
           sub.value.forEach { uuid ->
@@ -93,14 +97,19 @@ object Server : Closeable {
   suspend fun send(
     content: Packet,
     serverName: String
-  ) {
+  ) = withContext(Dispatchers.Default) fn@{
+    if (sameSideDeliver) {
+      launch {
+        packetHandler.invoke(content)
+      }
+    }
     val bytes = content.toCbor()
     val remote = remoteEndpoints[serverName] ?: run {
-      val uri = this.remotes[serverName] ?: return
+      val uri = this@Server.remotes[serverName] ?: return@fn
       reconnect(serverName, URI(uri))
-      return
+      return@fn
     }
-    withContext(Dispatchers.IO) {
+    launch {
       remote.send(bytes)
     }
   }

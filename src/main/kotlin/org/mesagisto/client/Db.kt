@@ -38,9 +38,7 @@ object Db : AutoCloseable {
     reverse: Boolean = true
   ) {
     val msgIdDb = midDbMap.getOrPut(target.contentHashCode()) {
-      Logger.trace { "未发现消息ID数据库,正在创建..." }
       val options = Options().createIfMissing(true)
-
       Path("$db_prefix/$name/msg-id").createDirectories()
       factory.open(File("$db_prefix/$name/msg-id/${Base64.encodeToString(target)}"), options)
     }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 data class Message(
   val profile: Profile = Profile(),
   val id: ByteArray = ByteArray(0),
+  val from: ByteArray = ByteArray(0),
   val reply: ByteArray? = null,
   val chain: List<MessageType> = emptyList()
 )
