@@ -65,10 +65,9 @@ object Server : Closeable {
     if (!lock.tryLock()) return Result.failure(IllegalStateException())
 
     remoteEndpoints.remove(name)
-    return WebSocketSession.asyncConnect(name, uri, 15_000, true)
+    return WebSocketSession.asyncConnect(name, uri, 30_000, true)
       .onSuccess {
         remoteEndpoints.put(name, it)?.close(2000)
-        lock.unlock()
         it.reconnect = false
         Logger.info { "Reconnect successfully" }
         subs.forEach { sub ->
@@ -78,11 +77,11 @@ object Server : Closeable {
             send(pkt, sub.key)
           }
         }
+        lock.unlock()
         reconnectPoison.remove(name)
       }.onFailure {
-        Logger.warn { "Reconnect to $name failed" }
+        Logger.warn { "Reconnect to $name failed ${it.message}" }
         lock.unlock()
-        Logger.error(it)
       }
   }
   fun roomId(roomAddress: String): UUID = roomMap.getOrPut(roomAddress) {
