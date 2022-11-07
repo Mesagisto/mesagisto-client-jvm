@@ -1,4 +1,4 @@
-package org.meowcat.mesagisto.client
+package org.mesagisto.client
 
 import java.util.Base64
 

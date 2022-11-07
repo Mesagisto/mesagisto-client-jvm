@@ -1,9 +1,9 @@
-package org.meowcat.mesagisto.client.utils
+package org.mesagisto.client.utils
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import org.meowcat.mesagisto.client.Logger
+import org.mesagisto.client.Logger
 import java.nio.file.Path
 import kotlin.io.path.* // ktlint-disable no-wildcard-imports
 
@@ -11,7 +11,7 @@ val YAML = ObjectMapper(YAMLFactory()).apply {
   configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-class ConfigKeeper<C> (
+data class ConfigKeeper<C> (
   val value: C,
   private val path: Path
 ) {
@@ -27,8 +27,9 @@ class ConfigKeeper<C> (
         Logger.info { "正在读取配置文件$path" }
         try {
           YAML.readValue(path.readText(), T::class.java)
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
           Logger.warn { "读取失败，可能是版本更新导致的." }
+          Logger.error(t)
           path.moveTo(path.parent.resolve("${path.fileName}.old"), true)
           Logger.warn { "使用默认配置覆盖原配置，原配置已修改成$path.old" }
           val default = defaultValue()

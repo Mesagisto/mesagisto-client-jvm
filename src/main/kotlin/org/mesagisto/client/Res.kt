@@ -1,4 +1,4 @@
-package org.meowcat.mesagisto.client
+package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import java.nio.file.FileSystems
@@ -54,17 +54,7 @@ object Res : CoroutineScope {
   fun waitFor(name: String, handler: (Path) -> Unit) {
     handlers.getOrPut(name) { HashSet() }.add(handler)
   }
-  private lateinit var photoUrlResolver: suspend (ByteArray, ByteArray) -> Result<String>
-  fun resolvePhotoUrl(
-    f: suspend (ByteArray, ByteArray) -> Result<String>
-  ) {
-    photoUrlResolver = f
-  }
-  suspend fun getPhotoUrl(uid: ByteArray): String? {
-    val fileId = Db.getImageId(uid) ?: return null
-    // fixme
-    return photoUrlResolver(uid, fileId).getOrNull()
-  }
+
   suspend fun convertFile(
     id: ByteArray,
     converter: suspend (Path, Path) -> Result<Unit>

@@ -1,14 +1,17 @@
-@file:Suppress("NOTHING_TO_INLINE", "unused", "MemberVisibilityCanBePrivate")
-package org.meowcat.mesagisto.client
+@file:Suppress("unused", "MemberVisibilityCanBePrivate", "ktlint:no-wildcard-imports")
 
+package org.mesagisto.client
 
-import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
-import org.meowcat.mesagisto.client.data.* // ktlint-disable no-wildcard-imports
-import java.nio.file.* // ktlint-disable no-wildcard-imports
+import kotlinx.coroutines.*
+import org.mesagisto.client.data.*
+import org.mesagisto.client.utils.Either
+import org.mesagisto.client.utils.right
+import java.nio.file.*
+import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.io.path.* // ktlint-disable no-wildcard-imports
+import kotlin.io.path.*
 
 object Cache : CoroutineScope {
 
@@ -16,16 +19,18 @@ object Cache : CoroutineScope {
     val file = Res.path(name)
     if (file.exists()) file else null
   }
-  suspend fun file(id: ByteArray, url: String?, address: String): Result<Path> {
+  suspend fun file(id: ByteArray, url: String?, room: UUID, server: String): Result<Path> {
     return if (url == null) {
-      fileById(id, address)
+      fileById(id, room, server)
     } else {
       fileByUrl(id, url)
     }
   }
+
   suspend fun fileById(
     id: ByteArray,
-    address: String,
+    room: UUID,
+    server: String
   ): Result<Path> = runCatching call@{
     val idStr = Base64.encodeToString(id)
     Logger.debug { "通过ID${idStr}缓存文件中" }
@@ -42,14 +47,13 @@ object Cache : CoroutineScope {
     }
 
     Logger.trace { "缓存文件不存在,正在请求其URL" }
-    val packet = Event.RequestImage(id).toPacket()
-    val response = Server.request(address, packet, Server.LibHeader).getOrThrow()
+    val pkt = Packet.new(room, Event.RequestImage(id).right())
+    val resp = Server.request(pkt, server).getOrThrow()
 
-    return@call when (val rPacket = Packet.fromCbor(response.data).getOrThrow()) {
+    return@call when (val event = resp.decrypt().getOrThrow()) {
       is Either.Right -> {
-        val event = rPacket.value
-        if (event !is Event.RespondImage) error("错误的响应")
-        fileByUrl(event.id, event.url).getOrThrow()
+        if (event.value !is Event.RespondImage) error("错误的响应")
+        fileByUrl(event.value.id, event.value.url).getOrThrow()
       }
       is Either.Left -> {
         error("错误的响应")
