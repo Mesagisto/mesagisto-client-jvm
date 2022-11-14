@@ -46,7 +46,9 @@ data class ConfigKeeper<C> (
         path.writeText(str)
         default
       }
-      return ConfigKeeper(value, path)
+      val keeper = ConfigKeeper(value, path)
+      keeper.save()
+      return keeper
     }
   }
 }

@@ -1,4 +1,5 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
+
 package org.mesagisto.client
 
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
@@ -24,7 +25,7 @@ object Server : Closeable {
   private val reconnectPoison = ConcurrentHashMap<ServerName, Mutex>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   var sameSideDeliver = true
-  suspend fun init(remotes: Map<String, String>,sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
+  suspend fun init(remotes: Map<String, String>, sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
     this@Server.sameSideDeliver = sameSideDeliver
     val endpoints = remotes.map {
