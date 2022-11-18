@@ -23,7 +23,8 @@ data class Profile(
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "t")
 @JsonSubTypes(
   Type(MessageType.Text::class, name = "text"),
-  Type(MessageType.Image::class, name = "image")
+  Type(MessageType.Image::class, name = "image"),
+  Type(MessageType.Sticker::class, name = "sticker")
 )
 sealed class MessageType {
 
@@ -32,6 +33,11 @@ sealed class MessageType {
   ) : MessageType()
 
   data class Image(
+    val id: ByteArray = ByteArray(0),
+    val url: String? = null
+  ) : MessageType()
+
+  data class Sticker(
     // unique id supplied by platform
     val id: ByteArray = ByteArray(0),
     val url: String? = null
