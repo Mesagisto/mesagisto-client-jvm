@@ -15,9 +15,6 @@ suspend inline fun <R> withCatch(
   } catch (e: Throwable) {
     Result.failure(e)
   }
-//  catch (cancel: CancellationException) {
-//    throw cancel
-//  }
 }
 
 fun Int.toByteArray(): ByteArray =
