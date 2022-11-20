@@ -26,3 +26,14 @@ jobs:
           ./gradlew clean checkMavenCentralPublication
           ./gradlew build publish
           ./gradlew closeAndReleaseRepository
+
+      - name: Get the version tag
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+
+      - name: Make sure Maven
+        run: |
+          wget --tries=100 --retry-on-http-error=404 --wait=30 https://repo1.maven.org/maven2/org/mesagisto/mesagisto-client/${{ steps.get_version.outputs.VERSION }}/mesagisto-client-${{ steps.get_version.outputs.VERSION }}.jar
+          wget --tries=100 --retry-on-http-error=404 --wait=30 https://repo1.maven.org/maven2/org/mesagisto/mesagisto-client/${{ steps.get_version.outputs.VERSION }}/mesagisto-client-${{ steps.get_version.outputs.VERSION }}.pom
+          wget --tries=100 --retry-on-http-error=404 --wait=30 https://maven.aliyun.com/repository/public/org/mesagisto/mesagisto-client/${{ steps.get_version.outputs.VERSION }}/mesagisto-client-${{ steps.get_version.outputs.VERSION }}.jar
+          wget --tries=100 --retry-on-http-error=404 --wait=30 https://maven.aliyun.com/repository/public/org/mesagisto/mesagisto-client/${{ steps.get_version.outputs.VERSION }}/mesagisto-client-${{ steps.get_version.outputs.VERSION }}.pom
