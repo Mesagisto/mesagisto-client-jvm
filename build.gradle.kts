@@ -35,7 +35,7 @@ tasks.test {
   useJUnitPlatform()
 }
 dependencies {
-  implementation("org.fusesource.leveldbjni:leveldbjni-all:1.8")
+  implementation("org.openlabtesting.leveldbjni:leveldbjni-all:1.8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
 
