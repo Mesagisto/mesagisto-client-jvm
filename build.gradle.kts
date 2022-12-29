@@ -35,7 +35,11 @@ tasks.test {
   useJUnitPlatform()
 }
 dependencies {
-  implementation("org.openlabtesting.leveldbjni:leveldbjni-all:1.8")
+
+  implementation("org.ktorm:ktorm-core:3.5.0")
+  implementation("org.ktorm:ktorm-support-sqlite:3.5.0")
+  compileOnly("org.xerial:sqlite-jdbc:3.40.0.0")
+
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
 

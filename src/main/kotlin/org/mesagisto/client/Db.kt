@@ -2,65 +2,97 @@
 
 package org.mesagisto.client
 
-import org.fusesource.leveldbjni.JniDBFactory.*
-import org.fusesource.leveldbjni.internal.NativeDB
-import org.iq80.leveldb.*
+import org.ktorm.database.Database
+import org.ktorm.dsl.*
+import org.ktorm.schema.Table
+import org.ktorm.schema.bytes
+import org.ktorm.support.sqlite.SQLiteDialect
+import org.ktorm.support.sqlite.insertOrUpdate
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
 
-object Db : AutoCloseable {
-  private val imageUrlDb by lazy {
-    val options = Options().createIfMissing(true)
-    factory.open(File("db_v2/$name/image_url_db"), options)
+object MessageID : Table<Nothing>("message_id") {
+  val id = bytes("id").primaryKey()
+  val local = bytes("local")
+  val remote = bytes("remote")
+  fun createTable(database: Database) {
+    database.useConnection { conn ->
+      conn.prepareStatement(
+        """
+        CREATE TABLE IF NOT EXISTS message_id(
+           id blob PRIMARY KEY NOT NULL,
+           local blob NOT NULL,
+           remote blob NOT NULL
+        );
+        """.trimIndent()
+      ).execute()
+    }
   }
-  private val midDbMap by lazy { ConcurrentHashMap<Int, DB>() }
+}
+object ImageDetail : Table<Nothing>("image_detail") {
+  val id = bytes("id").primaryKey()
+  val detail = bytes("detail")
+  fun createTable(database: Database) {
+    database.useConnection { conn ->
+      conn.prepareStatement(
+        """
+        CREATE TABLE IF NOT EXISTS message_id(
+           id blob PRIMARY KEY NOT NULL,
+           detail blob NOT NULL,
+        );
+        """.trimIndent()
+      ).execute()
+    }
+  }
+}
 
+object Db {
+  private lateinit var database: Database
   var name = "default"
-  const val db_prefix = "db_v2"
+  const val db_prefix = "db_v3"
 
-  // please pay attention to thread-context classloader here
   fun init(dbName: String) = runCatching {
     name = dbName
-    NativeDB.LIBRARY.load()
-    File("db").deleteRecursively()
-  }
-  fun putImageId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) =
-    imageUrlDb.put(uid, fileId)
 
-  fun getImageId(uid: ByteArray): ByteArray? = imageUrlDb.get(uid)
+    File("db").deleteRecursively()
+    File("db_v2").deleteRecursively()
+    File("$db_prefix/msgist-client").mkdirs()
+    database = Database.connect("jdbc:sqlite:$db_prefix/msgist-client/$name.sqlite", dialect = SQLiteDialect())
+    MessageID.createTable(database)
+    ImageDetail.createTable(database)
+  }
+  fun putImageId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) = database.insertOrUpdate(ImageDetail) {
+    set(it.id, uid)
+    set(it.detail, fileId)
+    onConflict {
+      set(it.detail, fileId)
+    }
+  }
+
+  fun getImageId(uid: ByteArray) = database.from(ImageDetail)
+    .select()
+    .where { ImageDetail.id eq uid }
+    .map { it[ImageDetail.detail] }
+    .firstOrNull()
 
   fun putMsgId(
     target: ByteArray,
-    uid: ByteArray,
-    id: ByteArray,
-    reverse: Boolean = true
-  ) {
-    val msgIdDb = midDbMap.getOrPut(target.contentHashCode()) {
-      val options = Options().createIfMissing(true)
-      Path("$db_prefix/$name/msg-id").createDirectories()
-      factory.open(File("$db_prefix/$name/msg-id/${Base64.encodeToString(target)}"), options)
-    }
-    msgIdDb.put(uid, id)
-    if (reverse) {
-      msgIdDb.put(id, uid)
+    remote: ByteArray,
+    local: ByteArray
+  ) = database.insertOrUpdate(MessageID) {
+    set(it.id, target + local)
+    set(it.local, local)
+    set(it.remote, remote)
+    onConflict {
+      set(it.remote, remote)
     }
   }
 
   fun getMsgId(
     target: ByteArray,
-    id: ByteArray
-  ): ByteArray? {
-    val msgIdDb = midDbMap[target.contentHashCode()] ?: return null
-    return msgIdDb[id]
-  }
-
-  override fun close() {
-    imageUrlDb.close()
-    midDbMap.forEachValue(4) {
-      it.close()
-    }
-    midDbMap.clear()
-  }
+    local: ByteArray
+  ): ByteArray? = database.from(MessageID)
+    .select()
+    .where { MessageID.id eq (target + local) }
+    .map { it[MessageID.remote] }
+    .firstOrNull()
 }
