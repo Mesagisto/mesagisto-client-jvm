@@ -56,7 +56,11 @@ object Db {
     File("db").deleteRecursively()
     File("db_v2").deleteRecursively()
     File("$db_prefix/msgist-client").mkdirs()
-    database = Database.connect("jdbc:sqlite:$db_prefix/msgist-client/$name.sqlite", dialect = SQLiteDialect())
+    database = Database.connect(
+      "jdbc:sqlite:$db_prefix/msgist-client/$name.sqlite",
+      driver = "org.sqlite.JDBC",
+      dialect = SQLiteDialect()
+    )
     MessageID.createTable(database)
     ImageDetail.createTable(database)
   }

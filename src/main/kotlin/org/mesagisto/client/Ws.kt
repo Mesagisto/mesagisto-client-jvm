@@ -16,7 +16,8 @@ class WebSocketSession(
   val serverName: String,
   val serverURI: URI,
   var fut: CompletableDeferred<WebSocketSession>?,
-  var reconnect: Boolean = false
+  var reconnect: Boolean = false,
+  private var closed: Boolean = false
 ) : WebSocketClient(serverURI) {
 
   companion object {
@@ -48,15 +49,20 @@ class WebSocketSession(
   }
 
   override fun onClose(code: Int, reason: String, remote: Boolean) = WsScope.launch fn@{
-    Logger.info { "Websocket closed with code $code additional info: $reason" }
+    if (reason.isEmpty()) {
+      Logger.info { "Websocket closed code $code" }
+    } else {
+      Logger.info { "Websocket closed code $code info: $reason }" }
+    }
+
     fut?.completeExceptionally(IllegalStateException(reason))
-    if (code == 2000 || reconnect) return@fn
+    if (closed || reconnect) return@fn
     var retryTimes = 1
     while (true) {
       Logger.info { "Trying to connect WS server $serverName, retry times $retryTimes" }
       if (Server.reconnect(serverName, serverURI).isSuccess) break
       retryTimes += 1
-      delay(2_000)
+      delay(10_000)
       continue
     }
   }.let { }
@@ -86,5 +92,10 @@ class WebSocketSession(
 
   override fun onError(ex: Exception) {
     Logger.error { "An error occurred in websocket:$ex" }
+  }
+
+  override fun close() {
+    closed = true
+    super.close()
   }
 }

@@ -25,8 +25,9 @@ object Server : Closeable {
   private val reconnectPoison = ConcurrentHashMap<ServerName, Mutex>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   var sameSideDeliver = true
-  suspend fun init(remotes: Map<String, String>, sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
+  suspend fun init(remotes: MutableMap<String, String>, sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
+    remotes["mesagisto"] = "wss://mesagisto.itsusinn.site"
     this@Server.sameSideDeliver = sameSideDeliver
     val endpoints = remotes.map {
       val serverName = it.key
@@ -91,7 +92,13 @@ object Server : Closeable {
   }
 
   override fun close() {
-    throw NotImplementedError()
+    for (endpoint in remoteEndpoints) {
+      runCatching {
+        endpoint.value.close()
+      }.onFailure {
+        it.printStackTrace()
+      }
+    }
   }
 
   suspend fun send(
