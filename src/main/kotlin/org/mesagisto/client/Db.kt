@@ -35,9 +35,9 @@ object ImageDetail : Table<Nothing>("image_detail") {
     database.useConnection { conn ->
       conn.prepareStatement(
         """
-        CREATE TABLE IF NOT EXISTS message_id(
+        CREATE TABLE IF NOT EXISTS image_detail(
            id blob PRIMARY KEY NOT NULL,
-           detail blob NOT NULL,
+           detail blob NOT NULL
         );
         """.trimIndent()
       ).execute()
@@ -48,12 +48,12 @@ object ImageDetail : Table<Nothing>("image_detail") {
 object Db {
   private lateinit var database: Database
   var name = "default"
-  const val db_prefix = "db_v3"
+  const val db_prefix = "db"
 
   fun init(dbName: String) = runCatching {
     name = dbName
 
-    File("db").deleteRecursively()
+    File("db_v3").deleteRecursively()
     File("db_v2").deleteRecursively()
     File("$db_prefix/msgist-client").mkdirs()
     database = Database.connect(
@@ -63,6 +63,8 @@ object Db {
     )
     MessageID.createTable(database)
     ImageDetail.createTable(database)
+  }.onFailure {
+    it.printStackTrace()
   }
   fun putImageId(uid: ByteArray, fileId: ByteArray = ByteArray(0)) = database.insertOrUpdate(ImageDetail) {
     set(it.id, uid)
