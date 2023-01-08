@@ -12,6 +12,7 @@ import java.io.File
 
 object MessageID : Table<Nothing>("message_id") {
   val id = bytes("id").primaryKey()
+  val target = bytes("target")
   val local = bytes("local")
   val remote = bytes("remote")
   fun createTable(database: Database) {
@@ -20,6 +21,7 @@ object MessageID : Table<Nothing>("message_id") {
         """
         CREATE TABLE IF NOT EXISTS message_id(
            id blob PRIMARY KEY NOT NULL,
+           target blob NOT NULL,
            local blob NOT NULL,
            remote blob NOT NULL
         );
@@ -48,13 +50,13 @@ object ImageDetail : Table<Nothing>("image_detail") {
 object Db {
   private lateinit var database: Database
   var name = "default"
-  const val db_prefix = "db"
+  const val db_prefix = "db_v2"
 
   fun init(dbName: String) = runCatching {
     name = dbName
 
+    File("db").deleteRecursively()
     File("db_v3").deleteRecursively()
-    File("db_v2").deleteRecursively()
     File("$db_prefix/msgist-client").mkdirs()
     database = Database.connect(
       "jdbc:sqlite:$db_prefix/msgist-client/$name.sqlite",
@@ -86,6 +88,7 @@ object Db {
     local: ByteArray
   ) = database.insertOrUpdate(MessageID) {
     set(it.id, target + local)
+    set(it.target, target)
     set(it.local, local)
     set(it.remote, remote)
     onConflict {
@@ -93,12 +96,21 @@ object Db {
     }
   }
 
-  fun getMsgId(
+  fun getMsgIdByLocal(
     target: ByteArray,
     local: ByteArray
   ): ByteArray? = database.from(MessageID)
     .select()
     .where { MessageID.id eq (target + local) }
     .map { it[MessageID.remote] }
+    .firstOrNull()
+
+  fun getMsgIdByRemote(
+    target: ByteArray,
+    remote: ByteArray
+  ): ByteArray? = database.from(MessageID)
+    .select()
+    .where { (MessageID.target eq target) and (MessageID.remote eq remote) }
+    .map { it[MessageID.local] }
     .firstOrNull()
 }

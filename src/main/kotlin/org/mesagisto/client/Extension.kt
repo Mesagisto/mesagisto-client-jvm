@@ -2,7 +2,6 @@ package org.mesagisto.client
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
-import org.jetbrains.annotations.TestOnly
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
@@ -35,6 +34,3 @@ fun ByteArray.toI32(): Int? =
     ByteBuffer.wrap(this)
       .getInt(0)
   }.getOrNull()
-
-@TestOnly
-fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
