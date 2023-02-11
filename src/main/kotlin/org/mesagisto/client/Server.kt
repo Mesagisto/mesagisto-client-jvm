@@ -25,11 +25,14 @@ object Server : Closeable {
   private val reconnectPoison = ConcurrentHashMap<ServerName, Mutex>()
   val roomMap = ConcurrentHashMap<String, UUID>()
   var sameSideDeliver = true
-  suspend fun init(remotes: MutableMap<String, String>, sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
+  suspend fun init(
+    remotes: MutableMap<String, String>,
+    sameSideDeliver: Boolean,
+    overrideCenter: String
+  ) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
-    val override = System.getenv("MESAGISTO_OVERRIDE_CENTER")
-    if (override.isNotBlank()) {
-      remotes["mesagisto"] = override
+    if (overrideCenter.isNotBlank()) {
+      remotes["mesagisto"] = overrideCenter
     } else {
       remotes["mesagisto"] = "wss://mesagisto.itsusinn.site"
     }

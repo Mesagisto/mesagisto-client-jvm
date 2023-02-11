@@ -10,6 +10,7 @@ class MesagistoConfig {
   var proxyEnable = false
   var proxyUri = "http://127.0.0.1:7890"
   var sameSideDeliver = true
+  var overrideCenter = ""
   suspend fun apply() {
     Cipher.init(cipherKey)
     Db.init(name)
@@ -17,7 +18,7 @@ class MesagistoConfig {
       Net.setProxy(proxyUri)
     }
     Server.packetHandler = packetHandler!!
-    Server.init(remotes, sameSideDeliver)
+    Server.init(remotes, sameSideDeliver, overrideCenter)
   }
 
   companion object {
