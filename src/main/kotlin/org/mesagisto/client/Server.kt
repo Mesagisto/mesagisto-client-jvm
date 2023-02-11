@@ -27,7 +27,12 @@ object Server : Closeable {
   var sameSideDeliver = true
   suspend fun init(remotes: MutableMap<String, String>, sameSideDeliver: Boolean) = withCatch(Dispatchers.Default) {
     this@Server.remotes = remotes
-    remotes["mesagisto"] = "wss://mesagisto.itsusinn.site"
+    val override = System.getenv("MESAGISTO_OVERRIDE_CENTER")
+    if (override.isNotBlank()) {
+      remotes["mesagisto"] = override
+    } else {
+      remotes["mesagisto"] = "wss://mesagisto.itsusinn.site"
+    }
     this@Server.sameSideDeliver = sameSideDeliver
     val endpoints = remotes.map {
       val serverName = it.key
