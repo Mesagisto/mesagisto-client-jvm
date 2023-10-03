@@ -54,9 +54,6 @@ object Db {
 
   fun init(dbName: String) = runCatching {
     name = dbName
-
-    File("db").deleteRecursively()
-    File("db_v3").deleteRecursively()
     File("$db_prefix/msgist-client").mkdirs()
     database = Database.connect(
       "jdbc:sqlite:$db_prefix/msgist-client/$name.sqlite",

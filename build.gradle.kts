@@ -8,7 +8,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 group = "org.mesagisto"
-version = "1.6.1"
+version = "1.6.2"
 
 mavenCentralPublish {
   nexusStaging {
