@@ -1,6 +1,6 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.6.0"
-  id("me.him188.maven-central-publish") version "1.0.0-dev-3"
+  id("org.jetbrains.kotlin.jvm") version "1.7.0"
+  id("me.him188.maven-central-publish") version "1.0.0"
   id("io.codearte.nexus-staging") version "0.30.0"
 }
 java {

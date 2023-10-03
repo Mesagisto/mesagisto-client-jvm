@@ -34,7 +34,7 @@ object Server : Closeable {
     if (overrideCenter.isNotBlank()) {
       remotes["mesagisto"] = overrideCenter
     } else {
-      remotes["mesagisto"] = "wss://mesagisto.itsusinn.site"
+      remotes["mesagisto"] = "wss://mesagisto.itsusinn.site/"
     }
     this@Server.sameSideDeliver = sameSideDeliver
     val endpoints = remotes.map {
