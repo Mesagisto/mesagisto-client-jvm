@@ -11,35 +11,34 @@ data class Message(
   val id: ByteArray = ByteArray(0),
   val from: ByteArray = ByteArray(0),
   val reply: ByteArray? = null,
-  val chain: List<MessageType> = emptyList()
-)
+  val chain: List<MessageType> = emptyList(),
+) : MessageOrEvent()
 
 data class Profile(
   val id: ByteArray = ByteArray(0),
   val username: String? = null,
-  val nick: String? = null
+  val nick: String? = null,
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "t")
 @JsonSubTypes(
   Type(MessageType.Text::class, name = "text"),
   Type(MessageType.Image::class, name = "image"),
-  Type(MessageType.Sticker::class, name = "sticker")
+  Type(MessageType.Sticker::class, name = "sticker"),
 )
 sealed class MessageType {
-
   data class Text(
-    val content: String = ""
+    val content: String = "",
   ) : MessageType()
 
   data class Image(
     val id: ByteArray = ByteArray(0),
-    val url: String? = null
+    val url: String? = null,
   ) : MessageType()
 
   data class Sticker(
     // unique id supplied by platform
     val id: ByteArray = ByteArray(0),
-    val url: String? = null
+    val url: String? = null,
   ) : MessageType()
 }
