@@ -8,7 +8,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_11
 }
 group = "org.mesagisto"
-version = "1.6.2"
+version = "1.7.0"
 
 mavenCentralPublish {
   nexusStaging {
@@ -38,16 +38,13 @@ dependencies {
 
   implementation("org.ktorm:ktorm-core:3.5.0")
   implementation("org.ktorm:ktorm-support-sqlite:3.5.0")
-  compileOnly("org.xerial:sqlite-jdbc:3.40.0.0")
+  compileOnly("org.xerial:sqlite-jdbc:3.45.1.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
 
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3")
-
-  implementation("com.fasterxml.uuid:java-uuid-generator:4.0.1")
-
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.16.1")
 
   implementation("com.fasterxml.uuid:java-uuid-generator:4.3.0")
   implementation("io.nats:jnats:2.17.2")
