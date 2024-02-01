@@ -4,8 +4,8 @@ plugins {
   id("io.codearte.nexus-staging") version "0.30.0"
 }
 java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
 }
 group = "org.mesagisto"
 version = "1.6.2"
@@ -27,7 +27,7 @@ repositories {
 }
 tasks.compileKotlin {
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
     freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
   }
 }
