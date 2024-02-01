@@ -50,7 +50,8 @@ dependencies {
 
   implementation("org.java-websocket:Java-WebSocket:1.5.3")
 
-  implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+  implementation("com.fasterxml.uuid:java-uuid-generator:4.3.0")
+  implementation("org.rfc8452.aead:AEAD:1.0.11")
 
   testImplementation(kotlin("test"))
 }
