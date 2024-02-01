@@ -18,7 +18,7 @@ class MesagistoConfig {
       Net.setProxy(proxyUri)
     }
     Server.packetHandler = packetHandler!!
-    Server.init(remotes, sameSideDeliver, overrideCenter)
+    Server.init(remotes, overrideCenter)
   }
 
   companion object {
