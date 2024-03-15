@@ -1,28 +1,60 @@
 plugins {
   id("org.jetbrains.kotlin.jvm") version "1.7.0"
-  id("me.him188.maven-central-publish") version "1.0.0"
-  id("io.codearte.nexus-staging") version "0.30.0"
+  id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+  `maven-publish`
+  signing
 }
 java {
   sourceCompatibility = JavaVersion.VERSION_11
   targetCompatibility = JavaVersion.VERSION_11
 }
 group = "org.mesagisto"
-version = "1.7.0"
+version = "1.7.0-SNAPSHOT"
 
-mavenCentralPublish {
-  nexusStaging {
-    serverUrl = "https://s01.oss.sonatype.org/service/local/"
-    stagingProfileId = "9bdaa8e9e83392"
-    username = credentials?.sonatypeUsername
-    password = credentials?.sonatypePassword
+nexusPublishing {
+  repositories {
+    sonatype { // only for users registered in Sonatype after 24 Feb 2021
+      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+    }
   }
-  useCentralS01()
-  githubProject("Mesagisto", "mesagisto-client-jvm")
-  licenseFromGitHubProject("LGPL-2.1", "master")
-  developer("Itsusinn")
 }
+
+publishing {
+  publications {
+    create<MavenPublication>("mavenJava") {
+      from(components["java"])
+
+      pom {
+        name.set("mesagisto-client-jvm")
+        // description.set("<<Component Description>>")-
+        // url.set("<<Component URL>>")
+        licenses {
+          license {
+            name.set("LGPL-2.1")
+            // url.set("<<License URL>>")
+          }
+        }
+        developers {
+          developer {
+            id.set("Itsusinn")
+            name.set("iHsin")
+            email.set("itsusinn@meowcat.org")
+          }
+        }
+      }
+    }
+  }
+}
+signing {
+  val signingKey: String? by project
+  val signingPassword = ""
+  useInMemoryPgpKeys(signingKey, signingPassword)
+  sign(publishing.publications["mavenJava"])
+}
+
 repositories {
+  mavenLocal()
   mavenCentral()
 }
 tasks.compileKotlin {
