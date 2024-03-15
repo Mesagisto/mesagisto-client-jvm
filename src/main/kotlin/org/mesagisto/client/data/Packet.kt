@@ -28,7 +28,6 @@ data class Packet constructor(
       data: MessageOrEvent,
     ): Packet {
       val bytes = Cipher.encrypt(Cbor.encodeToByteArray(data))
-
       return Packet(
         content = bytes,
         rid = roomId,

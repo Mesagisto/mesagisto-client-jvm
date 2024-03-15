@@ -7,6 +7,7 @@ import io.nats.client.Dispatcher
 import io.nats.client.Nats
 import io.nats.client.Subscription
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.future.await
 import org.mesagisto.client.data.MessageOrEvent
 import org.mesagisto.client.data.Packet
@@ -17,16 +18,32 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
 
 typealias PackHandler = suspend (Packet) -> Result<ControlFlow<Packet, Unit>>
 typealias ServerName = String
 
-object Server : Closeable {
+object Server : Closeable, CoroutineScope {
   private val remoteEndpoints = ConcurrentHashMap<String, NatsServer>()
   lateinit var packetHandler: PackHandler
   lateinit var remotes: Map<String, String>
 
   val roomMap = ConcurrentHashMap<String, UUID>()
+  val pktChannel = Channel<Packet>()
+
+  init {
+    poll()
+  }
+
+  fun poll() =
+    launch {
+      while (true) {
+        val pkt = pktChannel.receive()
+        launch {
+          val res = packetHandler.invoke(pkt)
+        }
+      }
+    }
 
   suspend fun init(
     remotes: MutableMap<String, String>,
@@ -97,9 +114,17 @@ object Server : Closeable {
     val entry =
       subs.getOrPut(serverName) {
         ConcurrentHashMap()
-      }.getOrPut(room) { SubCounter(AtomicInteger(0), remote.dispatcher.subscribe(room.toString()) { TODO() }) }
+      }.getOrPut(room) {
+        SubCounter(
+          AtomicInteger(0),
+          remote.dispatcher.subscribe(room.toString()) {
+            runBlocking {
+              pktChannel.send(Packet(it.data, room))
+            }
+          },
+        )
+      }
     entry.counter.incrementAndGet()
-    // TODO spawn task
   }
 
   suspend fun unsub(
@@ -139,6 +164,9 @@ object Server : Closeable {
       }
     remote.publish(inbox.replyTo, pkt.content)
   }
+
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 }
 
 data class SubCounter(val counter: AtomicInteger, val sub: Subscription)

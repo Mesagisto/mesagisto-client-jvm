@@ -9,8 +9,8 @@ class MesagistoConfig {
   var packetHandler: PackHandler? = null
   var proxyEnable = false
   var proxyUri = "http://127.0.0.1:7890"
-  var sameSideDeliver = true
   var overrideCenter = ""
+
   suspend fun apply() {
     Cipher.init(cipherKey)
     Db.init(name)
@@ -22,9 +22,7 @@ class MesagistoConfig {
   }
 
   companion object {
-    fun builder(
-      build: MesagistoConfig.() -> Unit
-    ): MesagistoConfig {
+    fun builder(build: MesagistoConfig.() -> Unit): MesagistoConfig {
       val builder = MesagistoConfig()
       build(builder)
       return builder
